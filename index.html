@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Absensi & Gaji - Cloud (Supabase)</title>
+    <title>Sistem Absensi & Gaji - Cloud (Supabase)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; }
@@ -149,11 +149,11 @@
 <div class="container">
     <div class="top-bar">
         <h1>📋 SISTEM ABSENSI & PENGAJIAN (CLOUD)</h1>
-        <div class="login-area" id="loginArea">
+        <div class="login-area">
             <span id="roleBadge" class="badge view-badge">🔒 View Only</span>
             <div id="authForm" style="display:flex; gap:8px;">
-                <input type="email" id="loginEmail" placeholder="Email admin" value="admin@toko.com" style="padding:6px; border-radius:20px; border:1px solid #ccc;">
-                <input type="password" id="loginPassword" placeholder="Password" style="padding:6px; border-radius:20px; border:1px solid #ccc;">
+                <input type="email" id="loginEmail" placeholder="Email admin" value="admin@toko.com" style="padding:6px; border-radius:20px; border:1px solid #ccc; width:150px;">
+                <input type="password" id="loginPassword" placeholder="Password" style="padding:6px; border-radius:20px; border:1px solid #ccc; width:120px;">
                 <button id="loginBtn" class="btn-login">Login</button>
             </div>
             <button id="logoutBtn" class="btn-logout" style="display:none;">Logout</button>
@@ -183,7 +183,7 @@
         </div>
         <div class="footer-note">
             <strong>Kode:</strong> H=Hadir, I=Izin, S=Sakit, A=Alpha, F=Lembur (8 jam, upah Rp10.000/jam).<br>
-            Warna merah = Shift 2 (Jum/Sab/Minggu) - hanya penanda. <strong>Admin</strong> (login email admin@toko.com) dapat mengedit semua sel. Publik hanya melihat.
+            Warna merah = Shift 2 (Jum/Sab/Minggu) - hanya penanda. <strong>Admin</strong> (login email admin@toko.com) dapat mengedit. Publik hanya melihat.
         </div>
     </div>
 
@@ -227,14 +227,13 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmamNsemVsY2FhbmJqcHBndG91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExODMwOTgsImV4cCI6MjA5Njc1OTA5OH0.TqJAkZjsYaOinKApvjHWjxbXZ9Esb0cI7K6yy_HPuMw';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Global state
     let isAdmin = false;
     let karyawanList = [];
     let tanggalList = [];
     let currentStartDate = "2026-05-26";
     let currentEndDate = "2026-06-25";
-    let absensiMap = new Map();      // key "karyawanId_tanggal" -> status
-    let potonganMap = new Map();     // key karyawanId -> nominal
+    let absensiMap = new Map();   // key "karyawanId_tanggal" -> status
+    let potonganMap = new Map();  // key karyawanId -> nominal
 
     // Helper: generate daftar tanggal
     function generateTanggalList(start, end) {
@@ -255,10 +254,10 @@
         return list;
     }
 
-    // Load data dari Supabase (karyawan, periode, absensi, potongan)
+    // Load data dari Supabase
     async function loadAllData() {
         try {
-            // 1. Ambil periode aktif (ambil baris pertama dari tabel periode)
+            // 1. Ambil periode
             let { data: periode, error: errPeriode } = await supabase.from('periode').select('*').limit(1);
             if (!errPeriode && periode && periode.length > 0) {
                 currentStartDate = periode[0].start_date;
@@ -270,7 +269,7 @@
             }
             tanggalList = generateTanggalList(currentStartDate, currentEndDate);
 
-            // 2. Ambil daftar karyawan
+            // 2. Ambil karyawan
             let { data: karyawan, error: errKaryawan } = await supabase.from('karyawan').select('*').order('no');
             if (errKaryawan) throw errKaryawan;
             karyawanList = karyawan || [];
@@ -284,11 +283,10 @@
             if (errAbsensi) throw errAbsensi;
             absensiMap.clear();
             for (let row of absensiRows) {
-                let key = `${row.karyawan_id}_${row.tanggal}`;
-                absensiMap.set(key, row.status);
+                absensiMap.set(`${row.karyawan_id}_${row.tanggal}`, row.status);
             }
 
-            // 4. Ambil potongan untuk periode ini
+            // 4. Ambil potongan untuk periode
             let { data: potonganRows, error: errPotongan } = await supabase
                 .from('potongan')
                 .select('*')
@@ -299,17 +297,16 @@
             for (let row of potonganRows) {
                 potonganMap.set(row.karyawan_id, row.nominal);
             }
-            // Set default potongan 0 untuk karyawan yang belum ada
             for (let k of karyawanList) {
                 if (!potonganMap.has(k.id)) potonganMap.set(k.id, 0);
             }
         } catch (e) {
-            console.error('Error loading data:', e);
+            console.error(e);
             alert('Gagal memuat data. Pastikan koneksi internet dan Supabase aktif.');
         }
     }
 
-    // Simpan perubahan status absensi ke Supabase
+    // Update status absensi
     async function updateAbsensi(karyawanId, tanggal, newStatus) {
         if (!isAdmin) return false;
         const { error } = await supabase.from('absensi').upsert({
@@ -317,16 +314,12 @@
             tanggal: tanggal,
             status: newStatus
         }, { onConflict: 'karyawan_id, tanggal' });
-        if (error) {
-            alert('Gagal menyimpan: ' + error.message);
-            return false;
-        }
-        let key = `${karyawanId}_${tanggal}`;
-        absensiMap.set(key, newStatus);
+        if (error) { alert('Gagal menyimpan: ' + error.message); return false; }
+        absensiMap.set(`${karyawanId}_${tanggal}`, newStatus);
         return true;
     }
 
-    // Simpan potongan ke Supabase
+    // Update potongan
     async function updatePotongan(karyawanId, nominal) {
         if (!isAdmin) return false;
         const { error } = await supabase.from('potongan').upsert({
@@ -335,10 +328,7 @@
             periode_start: currentStartDate,
             periode_end: currentEndDate
         }, { onConflict: 'karyawan_id, periode_start, periode_end' });
-        if (error) {
-            alert('Gagal menyimpan potongan: ' + error.message);
-            return false;
-        }
+        if (error) { alert('Gagal menyimpan potongan: ' + error.message); return false; }
         potonganMap.set(karyawanId, nominal);
         return true;
     }
@@ -348,14 +338,11 @@
         if (!isAdmin) return false;
         await supabase.from('periode').delete().neq('id', 0);
         const { error } = await supabase.from('periode').insert({ start_date: newStart, end_date: newEnd });
-        if (error) {
-            alert('Gagal mengubah periode: ' + error.message);
-            return false;
-        }
+        if (error) { alert('Gagal mengubah periode: ' + error.message); return false; }
         currentStartDate = newStart;
         currentEndDate = newEnd;
         tanggalList = generateTanggalList(currentStartDate, currentEndDate);
-        // Isi absensi untuk tanggal baru dengan default 'H'
+        // Isi absensi untuk tanggal baru dengan 'H' jika belum ada
         for (let k of karyawanList) {
             for (let t of tanggalList) {
                 let key = `${k.id}_${t.dateStr}`;
@@ -367,7 +354,7 @@
         return true;
     }
 
-    // Reset semua status ke H
+    // Reset semua ke H
     async function resetAll() {
         if (!isAdmin) return;
         if (!confirm('Reset semua status menjadi H? Data potongan akan dipertahankan.')) return;
@@ -379,6 +366,7 @@
         renderAll();
     }
 
+    // Contoh variasi
     async function contohVariasi() {
         if (!isAdmin) return;
         await resetAll();
@@ -427,7 +415,6 @@
             let row = document.createElement('tr');
             row.appendChild(createTd(k.no));
             row.appendChild(createTd(k.nama));
-
             let hitung = {H:0, I:0, S:0, A:0, F:0};
             for (let t of tanggalList) {
                 let key = `${k.id}_${t.dateStr}`;
@@ -482,7 +469,7 @@
         tbody.innerHTML = '';
         let totalGapok=0, totalUpah=0, totalTunj=0, totalPot=0, totalAll=0;
         for (let k of karyawanList) {
-            let hadir = 0, alpha=0, jmlF=0;
+            let hadir=0, alpha=0, jmlF=0;
             for (let t of tanggalList) {
                 let st = absensiMap.get(`${k.id}_${t.dateStr}`) || 'H';
                 if (st === 'H') hadir++;
@@ -549,7 +536,7 @@
         tbody.innerHTML = '';
         let totalGapok=0, totalTunj=0, totalJam=0, totalUpah=0, totalPot=0, totalAll=0;
         for (let k of karyawanList) {
-            let hadir = 0, jmlF=0;
+            let hadir=0, jmlF=0;
             for (let t of tanggalList) {
                 let st = absensiMap.get(`${k.id}_${t.dateStr}`) || 'H';
                 if (st === 'H') hadir++;
@@ -650,7 +637,6 @@
         const resetBtn = document.getElementById('resetBtn');
         const contohBtn = document.getElementById('contohBtn');
         const tglMulai = document.getElementById('tanggalMulai');
-
         if (isAdmin) {
             roleBadge.textContent = '👑 Admin (Full Akses)';
             roleBadge.className = 'badge admin-badge';
@@ -672,7 +658,7 @@
         }
     }
 
-    // ======================= TAB SWITCHING =======================
+    // ======================= TAB & INIT =======================
     function initTabs() {
         const tabs = document.querySelectorAll('.tab-btn');
         const panes = document.querySelectorAll('.tab-pane');
