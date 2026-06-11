@@ -77,9 +77,6 @@ tr:hover td{background:#f9fafb}
 .toast.show{transform:translateY(0);opacity:1}
 .toast.success{background:var(--success)}
 .toast.error{background:var(--danger)}
-.loader{text-align:center;padding:40px;color:var(--muted);display:none}
-.spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-right:8px}
-@keyframes spin{to{transform:rotate(360deg)}}
 .slip-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
 .slip-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;position:relative}
 .slip-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
@@ -110,9 +107,9 @@ tr:hover td{background:#f9fafb}
     <div class="summary-card"><div class="label">Total Gaji</div><div class="value" id="s-gaji" style="color:var(--accent)">—</div></div>
   </div>
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('absensi')">📅 Absensi</button>
-    <button class="tab" onclick="switchTab('rekap')">💰 Rekap Gaji</button>
-    <button class="tab" onclick="switchTab('slip')">🧾 Slip Gaji</button>
+    <button class="tab active" data-tab="absensi">📅 Absensi</button>
+    <button class="tab" data-tab="rekap">💰 Rekap Gaji</button>
+    <button class="tab" data-tab="slip">🧾 Slip Gaji</button>
   </div>
   <div class="tab-content active" id="tab-absensi">
     <div class="toolbar">
@@ -190,7 +187,36 @@ function escapeHtml(str){ if(!str) return ''; return str.replace(/[&<>]/g, m=> m
 function openModal(id){ document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 function toast(msg,type=''){ let t=document.getElementById('toast'); t.textContent=msg; t.className='toast '+(type||''); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
-function switchTab(name){ document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['absensi','rekap','slip'][i]===name)); document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active')); document.getElementById('tab-'+name).classList.add('active'); }
+
+// SWITCH TAB (diperbaiki)
+function switchTab(tabName) {
+  // Update tab buttons
+  document.querySelectorAll('.tab').forEach(btn => {
+    if(btn.getAttribute('data-tab') === tabName) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+  // Update content
+  document.querySelectorAll('.tab-content').forEach(content => {
+    if(content.id === `tab-${tabName}`) {
+      content.classList.add('active');
+    } else {
+      content.classList.remove('active');
+    }
+  });
+}
+
+// Pasang event listener untuk tab setelah DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const tabName = btn.getAttribute('data-tab');
+      if(tabName) switchTab(tabName);
+    });
+  });
+});
 
 function updateSummary(){
   let total=allData.length, hadirPenuh=allData.filter(r=>countStatus(r,'A')===0&&countStatus(r,'I')===0&&countStatus(r,'S')===0).length, adaAlpha=allData.filter(r=>countStatus(r,'A')>0).length, totalGaji=allData.reduce((a,r)=>a+calcTotalGaji(r),0);
@@ -256,14 +282,14 @@ async function syncWithSupabase() {
   } else {
     usingSupabase = false;
     allData = JSON.parse(JSON.stringify(STATIC_KARYAWAN));
-    // Jika tidak ada data di Supabase dan kita menggunakan statis, kita bisa seed ke Supabase (opsional)
-    if(supabase) {
+    if(supabase && supabaseData === null) {
+      // seed data awal ke Supabase
       for(let row of allData) {
         await supabase.from('karyawan_absensi').upsert(row, { onConflict: 'id' });
       }
       usingSupabase = true;
       toast("Data awal telah disimpan ke Supabase", "success");
-    } else {
+    } else if(!supabase) {
       toast("Menggunakan data lokal (Supabase tidak terhubung)", "error");
     }
   }
@@ -286,7 +312,7 @@ async function upsertKaryawan(row) {
   }
   let success = await saveToDatabase(row);
   if(success) {
-    await syncWithSupabase(); // reload data terbaru
+    await syncWithSupabase();
     return null;
   } else {
     return { message: "Gagal menyimpan ke database" };
