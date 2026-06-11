@@ -3,136 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Sistem Absensi & Gaji - Terintegrasi Supabase</title>
+    <title>Sistem Absensi & Gaji - Supabase</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #f0f2f5;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 100%;
-            background: white;
-            border-radius: 24px;
-            padding: 20px;
-            overflow-x: auto;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 100%; background: white; border-radius: 24px; padding: 20px; overflow-x: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         h1 { color: #0f3b5c; margin: 0 0 10px 0; }
-        .tab-buttons {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 10px;
-        }
-        .tab-btn {
-            background: #e2e8f0;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 40px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .tab-btn.active {
-            background: #1e3a8a;
-            color: white;
-        }
-        .tab-pane {
-            display: none;
-        }
-        .tab-pane.active {
-            display: block;
-        }
-        .login-bar {
-            background: #eef2ff;
-            padding: 12px 16px;
-            border-radius: 16px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-        }
+        .tab-buttons { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .tab-btn { background: #e2e8f0; border: none; padding: 10px 24px; border-radius: 40px; font-weight: bold; cursor: pointer; }
+        .tab-btn.active { background: #1e3a8a; color: white; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        .login-bar { background: #eef2ff; padding: 12px 16px; border-radius: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
         .admin-badge { background: #16a34a; color: white; }
         .view-badge { background: #f97316; color: white; }
-        button {
-            background: #1e3a8a;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 40px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        button { background: #1e3a8a; color: white; border: none; padding: 8px 16px; border-radius: 40px; cursor: pointer; font-weight: bold; }
         button:disabled { background: #94a3b8; cursor: not-allowed; }
-        .periode-control {
-            background: #f8fafc;
-            padding: 12px;
-            border-radius: 16px;
-            margin: 15px 0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            align-items: center;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            font-size: 12px;
-            min-width: 800px;
-        }
-        th, td {
-            border: 1px solid #cbd5e1;
-            padding: 6px 4px;
-            text-align: center;
-        }
+        .periode-control { background: #f8fafc; padding: 12px; border-radius: 16px; margin: 15px 0; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+        table { border-collapse: collapse; width: 100%; font-size: 12px; min-width: 800px; }
+        th, td { border: 1px solid #cbd5e1; padding: 6px 4px; text-align: center; }
         th { background: #e2e8f0; position: sticky; top: 0; }
         .bg-merah { background-color: #fee2e2 !important; }
-        select.status-select {
-            padding: 4px;
-            border-radius: 8px;
-            border: 1px solid #94a3b8;
-            width: 60px;
-        }
+        select.status-select { padding: 4px; border-radius: 8px; border: 1px solid #94a3b8; width: 60px; }
         select:disabled { background: #f1f5f9; cursor: not-allowed; }
-        input.potongan {
-            width: 90px;
-            padding: 4px;
-            border-radius: 8px;
-            border: 1px solid #94a3b8;
-        }
+        input.potongan { width: 90px; padding: 4px; border-radius: 8px; border: 1px solid #94a3b8; }
         input:disabled { background: #f1f5f9; }
         .total-row { background: #f1f5f9; font-weight: bold; }
-        .footer-note {
-            margin-top: 20px;
-            font-size: 12px;
-            background: #f8fafc;
-            padding: 10px;
-            border-radius: 12px;
-        }
+        .footer-note { margin-top: 20px; font-size: 12px; background: #f8fafc; padding: 10px; border-radius: 12px; }
         .loading { text-align: center; padding: 20px; color: #475569; }
+        .error-msg { color: #b91c1c; background: #fee2e2; padding: 8px; border-radius: 12px; margin-top: 8px; }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>📋 Sistem Absensi & Penggajian (Supabase)</h1>
     <div class="login-bar">
-        <div>
-            <span id="roleBadge" class="badge view-badge">🔒 View Only</span>
-            <span id="loginStatus" style="margin-left: 10px;"></span>
-        </div>
+        <div><span id="roleBadge" class="badge view-badge">🔒 View Only</span></div>
         <div>
             <input type="email" id="loginEmail" placeholder="Email admin" value="admin@toko.com" style="padding:6px; border-radius:20px; border:1px solid #ccc;">
             <input type="password" id="loginPassword" placeholder="Password" style="padding:6px; border-radius:20px; border:1px solid #ccc;">
@@ -140,6 +48,7 @@
             <button id="logoutBtn" style="display:none;">Logout</button>
         </div>
     </div>
+    <div id="loginErrorMsg" class="error-msg" style="display:none;"></div>
 
     <div class="tab-buttons">
         <button class="tab-btn active" data-tab="kehadiran">📆 Kehadiran</button>
@@ -148,7 +57,7 @@
         <button class="tab-btn" data-tab="admin">🔒 Admin (Edit)</button>
     </div>
 
-    <!-- TAB KEHADIRAN (Publik) -->
+    <!-- TAB KEHADIRAN -->
     <div id="kehadiran" class="tab-pane active">
         <div style="overflow-x: auto;">
             <table id="kehadiranTable">
@@ -156,10 +65,10 @@
                 <tbody id="kehadiranBody"></tbody>
             </table>
         </div>
-        <div class="footer-note">Kode: H=Hadir, I=Izin, S=Sakit, A=Alpha, F=Lembur (8 jam). Warna merah = Shift 2 (penanda). Data realtime dari Supabase.</div>
+        <div class="footer-note">Kode: H=Hadir, I=Izin, S=Sakit, A=Alpha, F=Lembur (8 jam). Warna merah = Shift 2 (penanda).</div>
     </div>
 
-    <!-- TAB REKAP GAJI (Publik) -->
+    <!-- TAB REKAP GAJI -->
     <div id="rekap" class="tab-pane">
         <div style="overflow-x: auto;">
             <table id="rekapTable">
@@ -168,10 +77,10 @@
                 <tfoot id="rekapFooter"></tfoot>
             </table>
         </div>
-        <div class="footer-note">Tunjangan khusus Aya = Rp300.000. Upah lembur Rp10.000/jam.</div>
+        <div class="footer-note">Tunjangan Aya = Rp300.000. Upah lembur Rp10.000/jam.</div>
     </div>
 
-    <!-- TAB SLIP GAJI (Publik) -->
+    <!-- TAB SLIP GAJI -->
     <div id="slip" class="tab-pane">
         <div style="overflow-x: auto;">
             <table id="slipTable">
@@ -182,7 +91,7 @@
         </div>
     </div>
 
-    <!-- TAB ADMIN (hanya tampil jika login) -->
+    <!-- TAB ADMIN -->
     <div id="admin" class="tab-pane">
         <div id="adminOnly" style="display:none;">
             <div class="periode-control">
@@ -192,22 +101,22 @@
                 <button id="resetBtn">Reset Semua Jadi H</button>
                 <button id="contohBtn">Contoh Variasi (F)</button>
             </div>
+            <h3>Edit Status Absensi</h3>
             <div style="overflow-x: auto;">
-                <h3>Edit Status Absensi</h3>
                 <table id="adminAbsensiTable">
                     <thead id="adminAbsensiHeader"></thead>
                     <tbody id="adminAbsensiBody"></tbody>
                 </table>
             </div>
-            <div style="margin-top: 30px;">
-                <h3>Edit Potongan Gaji</h3>
+            <h3>Edit Potongan Gaji</h3>
+            <div style="overflow-x: auto;">
                 <table id="adminPotonganTable">
                     <thead><tr><th>No</th><th>Nama</th><th>Potongan (Rp)</th></tr></thead>
                     <tbody id="adminPotonganBody"></tbody>
                 </table>
             </div>
         </div>
-        <div id="adminLoginMsg" class="loading" style="display:block;">🔐 Silakan login sebagai admin untuk mengedit data.</div>
+        <div id="adminLoginMsg" class="loading">🔐 Silakan login sebagai admin untuk mengedit data.</div>
     </div>
 </div>
 
@@ -223,7 +132,6 @@
     let potonganMap = new Map();
     let currentStartDate = "", currentEndDate = "";
 
-    // ==================== LOAD DATA DARI SUPABASE ====================
     async function loadData() {
         let { data: periode } = await supabase.from('periode').select('*').limit(1);
         if (periode && periode[0]) {
@@ -235,7 +143,6 @@
         }
         document.getElementById('tanggalMulai').value = currentStartDate;
 
-        // Generate tanggal
         tanggalList = [];
         let start = new Date(currentStartDate);
         let end = new Date(currentEndDate);
@@ -249,21 +156,17 @@
             });
         }
 
-        // Karyawan
         let { data: karyawan } = await supabase.from('karyawan').select('*').order('no');
         karyawanList = karyawan || [];
 
-        // Absensi
         let { data: absensiRows } = await supabase.from('absensi').select('*').gte('tanggal', currentStartDate).lte('tanggal', currentEndDate);
         absensiMap.clear();
         for (let r of absensiRows) absensiMap.set(`${r.karyawan_id}_${r.tanggal}`, r.status);
 
-        // Potongan
         let { data: potonganRows } = await supabase.from('potongan').select('*').eq('periode_start', currentStartDate).eq('periode_end', currentEndDate);
         potonganMap.clear();
         for (let r of potonganRows) potonganMap.set(r.karyawan_id, r.nominal);
 
-        // Render semua tab
         renderKehadiran();
         renderRekap();
         renderSlip();
@@ -273,7 +176,6 @@
         }
     }
 
-    // ==================== RENDER TAB KEHADIRAN ====================
     function renderKehadiran() {
         const thead = document.getElementById('kehadiranHeader');
         let headerRow = '<tr><th>No</th><th>Nama</th>';
@@ -309,7 +211,6 @@
         }
     }
 
-    // ==================== RENDER REKAP GAJI ====================
     function renderRekap() {
         const tbody = document.getElementById('rekapBody');
         tbody.innerHTML = '';
@@ -352,7 +253,6 @@
         </tr>`;
     }
 
-    // ==================== RENDER SLIP GAJI ====================
     function renderSlip() {
         const tbody = document.getElementById('slipBody');
         tbody.innerHTML = '';
@@ -385,15 +285,14 @@
         }
         document.getElementById('slipFooter').innerHTML = `<tr class="total-row">
             <td colspan="3">TOTAL</td>
-            <td></td><td>Rp${totalGapok.toLocaleString()}</td><td>Rp${totalTunj.toLocaleString()}</td>
+            <td>   </td><td>Rp${totalGapok.toLocaleString()}</td><td>Rp${totalTunj.toLocaleString()}</td>
             <td>${totalJam}</td><td>Rp${totalUpah.toLocaleString()}</td><td>Rp${totalPot.toLocaleString()}</td><td>Rp${totalAll.toLocaleString()}</td>
         </tr>`;
     }
 
-    // ==================== RENDER ADMIN (ABSENSI EDIT) ====================
     function renderAdminAbsensi() {
         const thead = document.getElementById('adminAbsensiHeader');
-        let headerRow = '<tr><th>No</th><th>Nama</th>';
+        let headerRow = '</table><th>No</th><th>Nama</th>';
         for (let t of tanggalList) {
             let redClass = t.isRed ? 'class="bg-merah"' : '';
             headerRow += `<th ${redClass}>${t.full}</th>`;
@@ -432,7 +331,7 @@
                         }, { onConflict: 'karyawan_id, tanggal' });
                         if (!error) {
                             absensiMap.set(`${kid}_${tglStr}`, newStatus);
-                            loadData(); // refresh semua tab
+                            loadData();
                         } else alert('Gagal update: ' + error.message);
                     };
                 })(k.id, t.dateStr, select);
@@ -485,7 +384,6 @@
         }
     }
 
-    // ==================== AKSI ADMIN ====================
     async function resetAll() {
         if (!isAdmin || !confirm('Reset semua status ke H?')) return;
         for (let k of karyawanList) {
@@ -499,6 +397,7 @@
         }
         loadData();
     }
+
     async function contohVariasi() {
         if (!isAdmin) return;
         await resetAll();
@@ -522,6 +421,7 @@
         }
         loadData();
     }
+
     async function ubahPeriode() {
         if (!isAdmin) return;
         let newStart = document.getElementById('tanggalMulai').value;
@@ -530,7 +430,6 @@
         let endStr = newEnd.toISOString().slice(0,10);
         await supabase.from('periode').delete().neq('id', 0);
         await supabase.from('periode').insert({ start_date: newStart, end_date: endStr });
-        // Buat absensi default H untuk periode baru
         for (let k of karyawanList) {
             let d = new Date(newStart);
             while (d <= newEnd) {
@@ -546,28 +445,39 @@
         loadData();
     }
 
-    // ==================== AUTHENTIKASI ====================
     async function login() {
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) return alert('Login gagal: ' + error.message);
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user.email === 'admin@toko.com') {
-            isAdmin = true;
-            localStorage.setItem('adminSession', 'true');
-            updateUI();
-            await loadData();
-            // Tampilkan tab admin
-            document.getElementById('adminOnly').style.display = 'block';
-            document.getElementById('adminLoginMsg').style.display = 'none';
-            renderAdminAbsensi();
-            renderAdminPotongan();
-        } else {
-            alert('Bukan akun admin');
-            await supabase.auth.signOut();
+        const errorDiv = document.getElementById('loginErrorMsg');
+        errorDiv.style.display = 'none';
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+            errorDiv.innerText = '❌ Login gagal: ' + error.message;
+            errorDiv.style.display = 'block';
+            return;
         }
+        const user = data.user;
+        if (user.email !== 'admin@toko.com') {
+            errorDiv.innerText = '❌ Akun ini bukan admin. Hanya admin@toko.com yang diizinkan.';
+            errorDiv.style.display = 'block';
+            await supabase.auth.signOut();
+            return;
+        }
+        isAdmin = true;
+        localStorage.setItem('adminSession', 'true');
+        updateUI();
+        await loadData();
+        document.getElementById('adminOnly').style.display = 'block';
+        document.getElementById('adminLoginMsg').style.display = 'none';
+        renderAdminAbsensi();
+        renderAdminPotongan();
+        errorDiv.innerText = '✅ Login berhasil! Sekarang Anda dapat mengedit data.';
+        errorDiv.style.background = '#dcfce7';
+        errorDiv.style.color = '#166534';
+        errorDiv.style.display = 'block';
+        setTimeout(() => errorDiv.style.display = 'none', 3000);
     }
+
     async function logout() {
         await supabase.auth.signOut();
         localStorage.removeItem('adminSession');
@@ -576,7 +486,9 @@
         document.getElementById('adminOnly').style.display = 'none';
         document.getElementById('adminLoginMsg').style.display = 'block';
         await loadData();
+        document.getElementById('loginErrorMsg').style.display = 'none';
     }
+
     function updateUI() {
         const roleBadge = document.getElementById('roleBadge');
         const loginBtn = document.getElementById('loginBtn');
@@ -597,10 +509,11 @@
             document.getElementById('adminLoginMsg').style.display = 'block';
         }
     }
+
     async function checkSession() {
         if (localStorage.getItem('adminSession') === 'true') {
             const { data } = await supabase.auth.getSession();
-            if (data.session && data.session.user.email === 'admin@toko.com') {
+            if (data.session && data.session.user && data.session.user.email === 'admin@toko.com') {
                 isAdmin = true;
                 updateUI();
                 await loadData();
@@ -609,7 +522,7 @@
                 renderAdminAbsensi();
                 renderAdminPotongan();
             } else {
-                logout();
+                await logout();
             }
         } else {
             isAdmin = false;
@@ -618,7 +531,6 @@
         }
     }
 
-    // Helper
     function createTd(txt) { let td = document.createElement('td'); td.textContent = txt; return td; }
     function getWarna(s) {
         if(s==='H') return '#dcfce7';
@@ -629,7 +541,6 @@
         return 'white';
     }
 
-    // Tab switching
     function initTabs() {
         const tabs = document.querySelectorAll('.tab-btn');
         const panes = document.querySelectorAll('.tab-pane');
@@ -640,7 +551,6 @@
                 document.getElementById(tabId).classList.add('active');
                 tabs.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                // Jika tab admin dan belum login, tampilkan pesan
                 if (tabId === 'admin' && !isAdmin) {
                     document.getElementById('adminOnly').style.display = 'none';
                     document.getElementById('adminLoginMsg').style.display = 'block';
