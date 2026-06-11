@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Kehadiran Karyawan - Publik</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 100%;
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            overflow-x: auto;
+            flex: 1;
+        }
+        h1 { color: #0f3b5c; margin-top: 0; }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 12px;
+            min-width: 800px;
+        }
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 6px 4px;
+            text-align: center;
+        }
+        th { background: #e2e8f0; position: sticky; top: 0; }
+        .bg-merah { background-color: #fee2e2 !important; }
+        .footer-nav {
+            margin-top: 20px;
+            background: white;
+            border-radius: 40px;
+            padding: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .footer-nav a {
+            text-decoration: none;
+            background: #1e3a8a;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            margin: 0 8px;
+            display: inline-block;
+            font-weight: bold;
+        }
+        .footer-nav a.active {
+            background: #2c5f2d;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #475569;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📋 Tabel Kehadiran Karyawan</h1>
+    <div id="loading" class="loading">Memuat data...</div>
+    <div style="overflow-x: auto;">
+        <table id="absensiTable">
+            <thead id="headerAbsensi"></thead>
+            <tbody id="bodyAbsensi"></tbody>
+        </table>
+    </div>
+</div>
+<div class="footer-nav">
+    <a href="kehadiran.html" class="active">📆 Kehadiran</a>
+    <a href="rekapgaji.html">💰 Rekap Gaji</a>
+    <a href="slipgaji.html">🧾 Slip Gaji</a>
+    <a href="admin.html">🔒 Admin</a>
+</div>
+<script>
+    const SUPABASE_URL = 'https://vfjclzelcaanbjppgtou.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmamNsemVsY2FhbmJqcHBndG91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExODMwOTgsImV4cCI6MjA5Njc1OTA5OH0.TqJAkZjsYaOinKApvjHWjxbXZ9Esb0cI7K6yy_HPuMw';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let karyawanList = [];
+    let tanggalList = [];
+    let absensiMap = new Map();
+
+    async function loadData() {
+        // Ambil periode aktif
+        let { data: periode, error: e1 } = await supabase.from('periode').select('*').limit(1);
+        if (e1) {
+            console.error(e1);
+            document.getElementById('loading').innerHTML = 'Gagal memuat periode. Pastikan tabel periode ada.';
+            return;
+        }
+        let start = periode?.[0]?.start_date || '2026-05-26';
+        let end = periode?.[0]?.end_date || '2026-06-25';
+
+        // Generate tanggal
+        tanggalList = [];
+        let startDate = new Date(start);
+        let endDate = new Date(end);
+        let hariIndo = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            let isRed = (d.getDay() === 5 || d.getDay() === 6 || d.getDay() === 0);
+            tanggalList.push({
+                dateStr: d.toISOString().slice(0,10),
+                full: `${d.getDate()} ${hariIndo[d.getDay()]}`,
+                isRed
+            });
+        }
+
+        // Ambil karyawan
+        let { data: karyawan, error: e2 } = await supabase.from('karyawan').select('*').order('no');
+        if (e2) {
+            console.error(e2);
+            document.getElementById('loading').innerHTML = 'Gagal memuat karyawan. Pastikan tabel karyawan ada.';
+            return;
+        }
+        karyawanList = karyawan;
+
+        // Ambil absensi
+        let { data: absensiRows, error: e3 } = await supabase
+            .from('absensi')
+            .select('*')
+            .gte('tanggal', start)
+            .lte('tanggal', end);
+        if (e3) {
+            console.error(e3);
+            document.getElementById('loading').innerHTML = 'Gagal memuat absensi.';
+            return;
+        }
+        absensiMap.clear();
+        for (let row of absensiRows) {
+            absensiMap.set(`${row.karyawan_id}_${row.tanggal}`, row.status);
+        }
+
+        renderTable();
+        document.getElementById('loading').style.display = 'none';
+    }
+
+    function renderTable() {
+        if (!karyawanList.length || !tanggalList.length) return;
+        const thead = document.getElementById('headerAbsensi');
+        let headerRow = '</tr><th>No</th><th>Nama</th>';
+        for (let t of tanggalList) {
+            let redClass = t.isRed ? 'class="bg-merah"' : '';
+            headerRow += `<th ${redClass}>${t.full}</th>`;
+        }
+        headerRow += '<th>Total H</th><th>Total I</th><th>Total S</th><th>Total A</th><th>Total F</th></tr>';
+        thead.innerHTML = headerRow;
+
+        const tbody = document.getElementById('bodyAbsensi');
+        tbody.innerHTML = '';
+        for (let k of karyawanList) {
+            let row = document.createElement('tr');
+            row.appendChild(createTd(k.no));
+            row.appendChild(createTd(k.nama));
+            let hitung = {H:0, I:0, S:0, A:0, F:0};
+            for (let t of tanggalList) {
+                let status = absensiMap.get(`${k.id}_${t.dateStr}`) || 'H';
+                hitung[status]++;
+                let td = document.createElement('td');
+                td.textContent = status;
+                td.style.backgroundColor = getWarna(status);
+                if (t.isRed) td.classList.add('bg-merah');
+                row.appendChild(td);
+            }
+            row.appendChild(createTd(hitung.H));
+            row.appendChild(createTd(hitung.I));
+            row.appendChild(createTd(hitung.S));
+            row.appendChild(createTd(hitung.A));
+            row.appendChild(createTd(hitung.F));
+            tbody.appendChild(row);
+        }
+    }
+
+    function createTd(txt) { let td = document.createElement('td'); td.textContent = txt; return td; }
+    function getWarna(s) {
+        if(s==='H') return '#dcfce7';
+        if(s==='I') return '#fef9c3';
+        if(s==='S') return '#fed7aa';
+        if(s==='A') return '#fecaca';
+        if(s==='F') return '#d9f99d';
+        return 'white';
+    }
+    loadData();
+</script>
+</body>
+</html>
