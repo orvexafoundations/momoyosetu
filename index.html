@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Sistem Absensi & Gaji - Supabase</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Sistem Absensi & Gaji - Supabase (Fix CDN)</title>
+    <!-- Menggunakan CDN alternatif (unpkg) untuk menghindari blokir tracking -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
@@ -34,6 +35,7 @@
         .footer-note { margin-top: 20px; font-size: 12px; background: #f8fafc; padding: 10px; border-radius: 12px; }
         .loading { text-align: center; padding: 20px; color: #475569; }
         .error-msg { color: #b91c1c; background: #fee2e2; padding: 8px; border-radius: 12px; margin-top: 8px; }
+        .warning-msg { background: #fef9c3; color: #854d0e; padding: 8px; border-radius: 12px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -48,6 +50,7 @@
             <button id="logoutBtn" style="display:none;">Logout</button>
         </div>
     </div>
+    <div id="storageWarning" class="warning-msg" style="display:none;">⚠️ Peringatan: Browser Anda memblokir penyimpanan lokal. Silakan nonaktifkan "Tracking Prevention" untuk situs ini agar login admin berfungsi.</div>
     <div id="loginErrorMsg" class="error-msg" style="display:none;"></div>
 
     <div class="tab-buttons">
@@ -123,7 +126,23 @@
 <script>
     const SUPABASE_URL = 'https://vfjclzelcaanbjppgtou.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmamNsemVsY2FhbmJqcHBndG91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExODMwOTgsImV4cCI6MjA5Njc1OTA5OH0.TqJAkZjsYaOinKApvjHWjxbXZ9Esb0cI7K6yy_HPuMw';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // Cek apakah storage bisa diakses
+    let storageAvailable = true;
+    try {
+        localStorage.setItem('test', 'test');
+        localStorage.removeItem('test');
+    } catch(e) {
+        storageAvailable = false;
+        document.getElementById('storageWarning').style.display = 'block';
+    }
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+            storage: storageAvailable ? localStorage : undefined,
+            storageKey: 'supabase-auth-token'
+        }
+    });
 
     let isAdmin = false;
     let karyawanList = [];
@@ -292,7 +311,7 @@
 
     function renderAdminAbsensi() {
         const thead = document.getElementById('adminAbsensiHeader');
-        let headerRow = '</table><th>No</th><th>Nama</th>';
+        let headerRow = '<tr><th>No</th><th>Nama</th>';
         for (let t of tanggalList) {
             let redClass = t.isRed ? 'class="bg-merah"' : '';
             headerRow += `<th ${redClass}>${t.full}</th>`;
@@ -464,7 +483,7 @@
             return;
         }
         isAdmin = true;
-        localStorage.setItem('adminSession', 'true');
+        if (storageAvailable) localStorage.setItem('adminSession', 'true');
         updateUI();
         await loadData();
         document.getElementById('adminOnly').style.display = 'block';
@@ -480,7 +499,7 @@
 
     async function logout() {
         await supabase.auth.signOut();
-        localStorage.removeItem('adminSession');
+        if (storageAvailable) localStorage.removeItem('adminSession');
         isAdmin = false;
         updateUI();
         document.getElementById('adminOnly').style.display = 'none';
@@ -511,7 +530,7 @@
     }
 
     async function checkSession() {
-        if (localStorage.getItem('adminSession') === 'true') {
+        if (storageAvailable && localStorage.getItem('adminSession') === 'true') {
             const { data } = await supabase.auth.getSession();
             if (data.session && data.session.user && data.session.user.email === 'admin@toko.com') {
                 isAdmin = true;
