@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Sistem Absensi & Gaji - Supabase</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 100%;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 20px;
+            overflow-x: auto;
+        }
+        h1 { font-size: 1.6rem; margin: 0 0 10px 0; color: #0f3b5c; }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .admin-badge { background: #16a34a; color: white; }
+        .view-badge { background: #f97316; color: white; }
+        .login-area {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        button, .btn {
+            background: #1e3a8a;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 4px;
+        }
+        button:disabled, .btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+        .btn-logout { background: #b91c1c; }
+        .btn-login { background: #2c5f2d; }
+        .periode-control {
+            background: #eef2ff;
+            padding: 12px;
+            border-radius: 16px;
+            margin: 15px 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            background: #e2e8f0;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            background: #1e3a8a;
+            color: white;
+        }
+        .tab-pane {
+            display: none;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 12px;
+            min-width: 800px;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 6px 4px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        th {
+            background: #e2e8f0;
+            position: sticky;
+            top: 0;
+        }
+        .bg-merah { background-color: #fee2e2 !important; }
+        select.status-select {
+            padding: 4px;
+            border-radius: 8px;
+            border: 1px solid #94a3b8;
+            width: 60px;
+        }
+        select:disabled { background: #f1f5f9; cursor: not-allowed; }
+        input.potongan {
+            width: 90px;
+            padding: 4px;
+            border-radius: 8px;
+            border: 1px solid #94a3b8;
+        }
+        input:disabled { background: #f1f5f9; cursor: not-allowed; }
+        .footer-note {
+            margin-top: 20px;
+            font-size: 12px;
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 12px;
+            line-height: 1.5;
+        }
+        .total-row { background: #f1f5f9; font-weight: bold; }
+        .login-form {
+            background: #eef2ff;
+            padding: 15px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .login-form input {
+            padding: 8px 12px;
+            border-radius: 40px;
+            border: 1px solid #cbd5e1;
+        }
+        @media (max-width: 700px) {
+            body { padding: 10px; }
+            td, th { padding: 4px 2px; font-size: 10px; }
+            select.status-select { width: 50px; font-size: 10px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="top-bar">
+        <h1>📋 SISTEM ABSENSI & PENGAJIAN (CLOUD)</h1>
+        <div class="login-area" id="loginArea">
+            <span id="roleBadge" class="badge view-badge">🔒 View Only</span>
+            <div id="authForm" style="display:flex; gap:8px;">
+                <input type="email" id="loginEmail" placeholder="Email admin" value="admin@toko.com" style="padding:6px; border-radius:20px; border:1px solid #ccc;">
+                <input type="password" id="loginPassword" placeholder="Password" style="padding:6px; border-radius:20px; border:1px solid #ccc;">
+                <button id="loginBtn" class="btn-login">Login</button>
+            </div>
+            <button id="logoutBtn" class="btn-logout" style="display:none;">Logout</button>
+        </div>
+    </div>
+
+    <div class="tab-buttons">
+        <button class="tab-btn active" data-tab="absensi">📆 Absensi (31 hari)</button>
+        <button class="tab-btn" data-tab="rekap">💰 Rekap Gaji</button>
+        <button class="tab-btn" data-tab="slip">🧾 Slip Gaji</button>
+    </div>
+
+    <!-- PANE ABSENSI -->
+    <div id="absensi" class="tab-pane active">
+        <div class="periode-control">
+            <label>📅 Tanggal Mulai (31 hari):</label>
+            <input type="date" id="tanggalMulai" value="2026-05-26">
+            <button id="ubahPeriodeBtn">Ubah Periode</button>
+            <button id="resetBtn">Reset Semua Jadi H</button>
+            <button id="contohBtn">Contoh Variasi (F)</button>
+        </div>
+        <div style="overflow-x: auto;">
+            <table id="tabelAbsensi">
+                <thead id="headerAbsensi"></thead>
+                <tbody id="bodyAbsensi"></tbody>
+            </table>
+        </div>
+        <div class="footer-note">
+            <strong>Kode:</strong> H=Hadir, I=Izin, S=Sakit, A=Alpha, F=Lembur (8 jam, upah Rp10.000/jam).<br>
+            Warna merah = Shift 2 (Jum/Sab/Minggu) - hanya penanda. <strong>Admin</strong> (login dengan email admin@toko.com) dapat mengedit. Publik hanya melihat.
+        </div>
+    </div>
+
+    <!-- PANE REKAP GAJI -->
+    <div id="rekap" class="tab-pane">
+        <div style="overflow-x: auto;">
+            <table id="tabelRekap">
+                <thead>
+                    <tr><th>No</th><th>Nama</th><th>Jabatan</th><th>Total Hadir</th><th>Total Alpha</th><th>Hari F</th><th>Jam Lembur</th><th>Upah Lembur</th><th>Gaji Pokok</th><th>Tunjangan</th><th>Potongan (Rp)</th><th>Total Gaji</th></tr>
+                </thead>
+                <tbody id="bodyRekap"></tbody>
+                <tfoot id="footerRekap"></tfoot>
+            </table>
+        </div>
+        <div class="footer-note">
+            * Tunjangan khusus Aya = Rp300.000 (sudah termasuk).<br>
+            * Potongan hanya bisa diisi oleh admin yang sudah login.
+        </div>
+    </div>
+
+    <!-- PANE SLIP GAJI -->
+    <div id="slip" class="tab-pane">
+        <div style="overflow-x: auto;">
+            <table id="tabelSlip">
+                <thead>
+                    <tr><th>No</th><th>Nama</th><th>Jabatan</th><th>Total Hadir</th><th>Gaji Pokok</th><th>Tunjangan</th><th>Jam Lembur</th><th>Upah Lembur</th><th>Potongan</th><th>Total Gaji</th></tr>
+                </thead>
+                <tbody id="bodySlip"></tbody>
+                <tfoot id="footerSlip"></tfoot>
+            </table>
+        </div>
+        <div class="footer-note">
+            Slip gaji bersifat read-only, data diambil dari absensi dan potongan.
+        </div>
+    </div>
+</div>
+
+<script>
+    // ======================= KONFIGURASI SUPABASE =======================
+    const SUPABASE_URL = 'https://vfjclzelcaanbjppgtou.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmamNsemVsY2FhbmJqcHBndG91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExODMwOTgsImV4cCI6MjA5Njc1OTA5OH0.TqJAkZjsYaOinKApvjHWjxbXZ9Esb0cI7K6yy_HPuMw';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Global state
+    let isAdmin = false;
+    let karyawanList = [];
+    let tanggalList = [];
+    let currentStartDate = "2026-05-26";
+    let currentEndDate = "2026-06-25";
+    let absensiMap = new Map(); // key "karyawanId_tanggal" -> status
+    let potonganMap = new Map(); // key karyawanId -> nominal
+
+    // Helper: generate daftar tanggal
+    function generateTanggalList(start, end) {
+        let list = [];
+        let startDate = new Date(start);
+        let endDate = new Date(end);
+        let hariIndo = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            let isRed = (d.getDay() === 5 || d.getDay() === 6 || d.getDay() === 0);
+            list.push({
+                dateStr: d.toISOString().slice(0,10),
+                tgl: d.getDate(),
+                hari: hariIndo[d.getDay()],
+                full: `${d.getDate()} ${hariIndo[d.getDay()]}`,
+                isRed
+            });
+        }
+        return list;
+    }
+
+    // Load data dari Supabase (karyawan, periode, absensi, potongan)
+    async function loadAllData() {
+        try {
+            // 1. Ambil periode aktif (ambil baris pertama dari tabel periode)
+            let { data: periode, error: errPeriode } = await supabase.from('periode').select('*').limit(1);
+            if (!errPeriode && periode && periode.length > 0) {
+                currentStartDate = periode[0].start_date;
+                currentEndDate = periode[0].end_date;
+                document.getElementById('tanggalMulai').value = currentStartDate;
+            } else {
+                // fallback default
+                currentStartDate = "2026-05-26";
+                currentEndDate = "2026-06-25";
+            }
+            tanggalList = generateTanggalList(currentStartDate, currentEndDate);
+
+            // 2. Ambil daftar karyawan
+            let { data: karyawan, error: errKaryawan } = await supabase.from('karyawan').select('*').order('no');
+            if (errKaryawan) throw errKaryawan;
+            karyawanList = karyawan;
+
+            // 3. Ambil absensi untuk periode
+            let { data: absensiRows, error: errAbsensi } = await supabase
+                .from('absensi')
+                .select('*')
+                .gte('tanggal', currentStartDate)
+                .lte('tanggal', currentEndDate);
+            if (errAbsensi) throw errAbsensi;
+            absensiMap.clear();
+            for (let row of absensiRows) {
+                let key = `${row.karyawan_id}_${row.tanggal}`;
+                absensiMap.set(key, row.status);
+            }
+
+            // 4. Ambil potongan untuk periode ini (asumsikan periode potongan sama dengan periode absensi)
+            let { data: potonganRows, error: errPotongan } = await supabase
+                .from('potongan')
+                .select('*')
+                .eq('periode_start', currentStartDate)
+                .eq('periode_end', currentEndDate);
+            if (errPotongan) throw errPotongan;
+            potonganMap.clear();
+            for (let row of potonganRows) {
+                potonganMap.set(row.karyawan_id, row.nominal);
+            }
+            // Set default potongan 0 untuk karyawan yang belum ada
+            for (let k of karyawanList) {
+                if (!potonganMap.has(k.id)) potonganMap.set(k.id, 0);
+            }
+        } catch (e) {
+            console.error('Error loading data:', e);
+            alert('Gagal memuat data. Pastikan koneksi internet dan Supabase aktif.');
+        }
+    }
+
+    // Simpan perubahan status absensi ke Supabase
+    async function updateAbsensi(karyawanId, tanggal, newStatus) {
+        if (!isAdmin) return false;
+        const { error } = await supabase.from('absensi').upsert({
+            karyawan_id: karyawanId,
+            tanggal: tanggal,
+            status: newStatus
+        }, { onConflict: 'karyawan_id, tanggal' });
+        if (error) {
+            alert('Gagal menyimpan: ' + error.message);
+            return false;
+        }
+        let key = `${karyawanId}_${tanggal}`;
+        absensiMap.set(key, newStatus);
+        return true;
+    }
+
+    // Simpan potongan ke Supabase
+    async function updatePotongan(karyawanId, nominal) {
+        if (!isAdmin) return false;
+        const { error } = await supabase.from('potongan').upsert({
+            karyawan_id: karyawanId,
+            nominal: nominal,
+            periode_start: currentStartDate,
+            periode_end: currentEndDate
+        }, { onConflict: 'karyawan_id, periode_start, periode_end' });
+        if (error) {
+            alert('Gagal menyimpan potongan: ' + error.message);
+            return false;
+        }
+        potonganMap.set(karyawanId, nominal);
+        return true;
+    }
+
+    // Update periode (start_date) ke tabel periode
+    async function updatePeriode(newStart, newEnd) {
+        if (!isAdmin) return false;
+        // Hapus semua periode lama, lalu insert baru (atau update id=1)
+        await supabase.from('periode').delete().neq('id', 0);
+        const { error } = await supabase.from('periode').insert({ start_date: newStart, end_date: newEnd });
+        if (error) {
+            alert('Gagal mengubah periode: ' + error.message);
+            return false;
+        }
+        currentStartDate = newStart;
+        currentEndDate = newEnd;
+        tanggalList = generateTanggalList(currentStartDate, currentEndDate);
+        // Isi absensi untuk tanggal baru dengan default 'H' (jika belum ada)
+        for (let k of karyawanList) {
+            for (let t of tanggalList) {
+                let key = `${k.id}_${t.dateStr}`;
+                if (!absensiMap.has(key)) {
+                    await updateAbsensi(k.id, t.dateStr, 'H');
+                }
+            }
+        }
+        return true;
+    }
+
+    // Reset semua status ke H
+    async function resetAll() {
+        if (!isAdmin) return;
+        if (!confirm('Reset semua status menjadi H? Data potongan akan dipertahankan.')) return;
+        for (let k of karyawanList) {
+            for (let t of tanggalList) {
+                await updateAbsensi(k.id, t.dateStr, 'H');
+            }
+        }
+        renderAll();
+    }
+
+    async function contohVariasi() {
+        if (!isAdmin) return;
+        await resetAll();
+        let contoh = [
+            { karyawan_id:1, tanggal:'2026-05-29', st:'F' }, { karyawan_id:1, tanggal:'2026-06-05', st:'F' }, { karyawan_id:1, tanggal:'2026-06-10', st:'S' },
+            { karyawan_id:2, tanggal:'2026-05-31', st:'A' }, { karyawan_id:2, tanggal:'2026-06-01', st:'A' },
+            { karyawan_id:3, tanggal:'2026-06-03', st:'F' }, { karyawan_id:3, tanggal:'2026-06-04', st:'F' }, { karyawan_id:3, tanggal:'2026-06-15', st:'F' },
+            { karyawan_id:4, tanggal:'2026-06-07', st:'I' },
+            { karyawan_id:5, tanggal:'2026-06-13', st:'F' },
+            { karyawan_id:6, tanggal:'2026-06-17', st:'S' },
+            { karyawan_id:7, tanggal:'2026-06-20', st:'F' }, { karyawan_id:7, tanggal:'2026-06-21', st:'A' },
+            { karyawan_id:8, tanggal:'2026-06-09', st:'I' },
+            { karyawan_id:9, tanggal:'2026-06-24', st:'F' }, { karyawan_id:9, tanggal:'2026-06-25', st:'F' }
+        ];
+        for (let c of contoh) {
+            await updateAbsensi(c.karyawan_id, c.tanggal, c.st);
+        }
+        renderAll();
+    }
+
+    async function ubahPeriode() {
+        if (!isAdmin) return;
+        let newStart = document.getElementById('tanggalMulai').value;
+        let newEnd = new Date(newStart);
+        newEnd.setDate(newEnd.getDate() + 30);
+        let endStr = newEnd.toISOString().slice(0,10);
+        await updatePeriode(newStart, endStr);
+        renderAll();
+    }
+
+    // ======================= RENDER TABEL =======================
+    function renderAbsensi() {
+        const thead = document.getElementById('headerAbsensi');
+        let headerRow = '<tr><th>No</th><th>Nama</th>';
+        for (let t of tanggalList) {
+            let redClass = t.isRed ? 'class="bg-merah"' : '';
+            headerRow += `<th ${redClass}>${t.full}</th>`;
+        }
+        headerRow += '<th>Total H</th><th>Total I</th><th>Total S</th><th>Total A</th><th>Total F</th></tr>';
+        thead.innerHTML = headerRow;
+
+        const tbody = document.getElementById('bodyAbsensi');
+        tbody.innerHTML = '';
+        for (let k of karyawanList) {
+            let row = document.createElement('tr');
+            row.appendChild(createTd(k.no));
+            row.appendChild(createTd(k.nama));
+
+            let hitung = {H:0, I:0, S:0, A:0, F:0};
+            for (let t of tanggalList) {
+                let key = `${k.id}_${t.dateStr}`;
+                let status = absensiMap.get(key) || 'H';
+                hitung[status]++;
+                let td = document.createElement('td');
+                let select = document.createElement('select');
+                select.className = 'status-select';
+                ['H','I','S','A','F'].forEach(opt => {
+                    let op = document.createElement('option');
+                    op.value = opt;
+                    op.textContent = opt;
+                    if (opt === status) op.selected = true;
+                    select.appendChild(op);
+                });
+                select.disabled = !isAdmin;
+                td.style.backgroundColor = getWarna(status);
+                if (t.isRed) td.classList.add('bg-merah');
+                select.onchange = (function(kid, tglStr, sel) {
+                    return async function() {
+                        if (!isAdmin) return;
+                        let newStatus = sel.value;
+                        await updateAbsensi(kid, tglStr, newStatus);
+                        renderAll();
+                    };
+                })(k.id, t.dateStr, select);
+                td.appendChild(select);
+                row.appendChild(td);
+            }
+            row.appendChild(createTd(hitung.H));
+            row.appendChild(createTd(hitung.I));
+            row.appendChild(createTd(hitung.S));
+            row.appendChild(createTd(hitung.A));
+            row.appendChild(createTd(hitung.F));
+            tbody.appendChild(row);
+        }
+    }
+
+    function getWarna(s) {
+        if(s==='H') return '#dcfce7';
+        if(s==='I') return '#fef9c3';
+        if(s==='S') return '#fed7aa';
+        if(s==='A') return '#fecaca';
+        if(s==='F') return '#d9f99d';
+        return 'white';
+    }
+
+    function createTd(txt) { let td = document.createElement('td'); td.textContent = txt; return td; }
+
+    function renderRekap() {
+        const tbody = document.getElementById('bodyRekap');
+        tbody.innerHTML = '';
+        let totalGapok=0, totalUpah=0, totalTunj=0, totalPot=0, totalAll=0;
+        for (let k of karyawanList) {
+            let hadir = 0, alpha=0, jmlF=0;
+            for (let t of tanggalList) {
+                let key = `${k.id}_${t.dateStr}`;
+                let st = absensiMap.get(key) || 'H';
+                if (st === 'H') hadir++;
+                if (st === 'A') alpha++;
+                if (st === 'F') jmlF++;
+            }
+            let jamLembur = jmlF * 8;
+            let upahLembur = jamLembur * 10000;
+            let gapok = k.gapok;
+            let tunj = k.tunjangan;
+            let pot = potonganMap.get(k.id) || 0;
+            let total = gapok + upahLembur + tunj - pot;
+            totalGapok += gapok;
+            totalUpah += upahLembur;
+            totalTunj += tunj;
+            totalPot += pot;
+            totalAll += total;
+
+            let row = document.createElement('tr');
+            row.appendChild(createTd(k.no));
+            row.appendChild(createTd(k.nama));
+            row.appendChild(createTd(k.jabatan));
+            row.appendChild(createTd(hadir));
+            row.appendChild(createTd(alpha));
+            row.appendChild(createTd(jmlF));
+            row.appendChild(createTd(jamLembur));
+            row.appendChild(createTd(formatRupiah(upahLembur)));
+            row.appendChild(createTd(formatRupiah(gapok)));
+            row.appendChild(createTd(formatRupiah(tunj)));
+            let tdPot = document.createElement('td');
+            let inp = document.createElement('input');
+            inp.type = 'number';
+            inp.value = pot;
+            inp.className = 'potongan';
+            inp.disabled = !isAdmin;
+            inp.onchange = (function(kid, input) {
+                return async function() {
+                    if (!isAdmin) return;
+                    let val = parseInt(input.value) || 0;
+                    await updatePotongan(kid, val);
+                    renderAll();
+                };
+            })(k.id, inp);
+            tdPot.appendChild(inp);
+            row.appendChild(tdPot);
+            row.appendChild(createTd(formatRupiah(total)));
+            tbody.appendChild(row);
+        }
+        const footer = document.getElementById('footerRekap');
+        footer.innerHTML = `<tr class="total-row">
+            <td colspan="5">TOTAL</td>
+            <td>${karyawanList.reduce((a,_,i)=> a + (tanggalList.filter(t=>absensiMap.get(`${karyawanList[i].id}_${t.dateStr}`)==='F').length),0)}</td>
+            <td>${karyawanList.reduce((a,_,i)=> a + (tanggalList.filter(t=>absensiMap.get(`${karyawanList[i].id}_${t.dateStr}`)==='F').length*8),0)}</td>
+            <td>${formatRupiah(totalUpah)}</td>
+            <td>${formatRupiah(totalGapok)}</td>
+            <td>${formatRupiah(totalTunj)}</td>
+            <td>${formatRupiah(totalPot)}</td>
+            <td>${formatRupiah(totalAll)}</td>
+        </tr>`;
+    }
+
+    function renderSlip() {
+        const tbody = document.getElementById('bodySlip');
+        tbody.innerHTML = '';
+        let totalGapok=0, totalTunj=0, totalJam=0, totalUpah=0, totalPot=0, totalAll=0;
+        for (let k of karyawanList) {
+            let hadir = 0;
+            let jmlF = 0;
+            for (let t of tanggalList) {
+                let st = absensiMap.get(`${k.id}_${t.dateStr}`) || 'H';
+                if (st === 'H') hadir++;
+                if (st === 'F') jmlF++;
+            }
+            let jam = jmlF * 8;
+            let upah = jam * 10000;
+            let total = k.gapok + upah + k.tunjangan - (potonganMap.get(k.id)||0);
+            totalGapok += k.gapok;
+            totalTunj += k.tunjangan;
+            totalJam += jam;
+            totalUpah += upah;
+            totalPot += (potonganMap.get(k.id)||0);
+            totalAll += total;
+            let row = document.createElement('tr');
+            row.appendChild(createTd(k.no));
+            row.appendChild(createTd(k.nama));
+            row.appendChild(createTd(k.jabatan));
+            row.appendChild(createTd(hadir));
+            row.appendChild(createTd(formatRupiah(k.gapok)));
+            row.appendChild(createTd(formatRupiah(k.tunjangan)));
+            row.appendChild(createTd(jam));
+            row.appendChild(createTd(formatRupiah(upah)));
+            row.appendChild(createTd(formatRupiah(potonganMap.get(k.id)||0)));
+            row.appendChild(createTd(formatRupiah(total)));
+            tbody.appendChild(row);
+        }
+        document.getElementById('footerSlip').innerHTML = `<tr class="total-row">
+            <td colspan="4">TOTAL</td>
+            <td>${formatRupiah(totalGapok)}</td>
+            <td>${formatRupiah(totalTunj)}</td>
+            <td>${totalJam}</td>
+            <td>${formatRupiah(totalUpah)}</td>
+            <td>${formatRupiah(totalPot)}</td>
+            <td>${formatRupiah(totalAll)}</td>
+        </tr>`;
+    }
+
+    function formatRupiah(angka) { return 'Rp' + angka.toLocaleString('id-ID'); }
+
+    async function renderAll() {
+        await loadAllData(); // refresh data dari server
+        renderAbsensi();
+        renderRekap();
+        renderSlip();
+    }
+
+    // ======================= AUTHENTIKASI =======================
+    async function login() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+            alert('Login gagal: ' + error.message);
+            return;
+        }
+        // Cek apakah email admin (bisa juga dicek dari role, tapi sederhana)
+        if (data.user.email === 'admin@toko.com') {
+            isAdmin = true;
+            localStorage.setItem('supabaseSession', JSON.stringify(data.session));
+            updateUI();
+            await renderAll();
+        } else {
+            alert('Akun Anda tidak memiliki akses admin.');
+            await supabase.auth.signOut();
+        }
+    }
+
+    async function logout() {
+        await supabase.auth.signOut();
+        localStorage.removeItem('supabaseSession');
+        isAdmin = false;
+        updateUI();
+        await renderAll();
+    }
+
+    async function checkSession() {
+        const storedSession = localStorage.getItem('supabaseSession');
+        if (storedSession) {
+            const { data } = await supabase.auth.getSession();
+            if (data.session && data.session.user.email === 'admin@toko.com') {
+                isAdmin = true;
+            } else {
+                isAdmin = false;
+                localStorage.removeItem('supabaseSession');
+            }
+        } else {
+            isAdmin = false;
+        }
+        updateUI();
+    }
+
+    function updateUI() {
+        const roleBadge = document.getElementById('roleBadge');
+        const authForm = document.getElementById('authForm');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const ubahPeriodeBtn = document.getElementById('ubahPeriodeBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const contohBtn = document.getElementById('contohBtn');
+        const tglMulai = document.getElementById('tanggalMulai');
+
+        if (isAdmin) {
+            roleBadge.textContent = '👑 Admin (Full Akses)';
+            roleBadge.className = 'badge admin-badge';
+            authForm.style.display = 'none';
+            logoutBtn.style.display = 'inline-block';
+            ubahPeriodeBtn.disabled = false;
+            resetBtn.disabled = false;
+            contohBtn.disabled = false;
+            tglMulai.disabled = false;
+        } else {
+            roleBadge.textContent = '🔒 View Only (Tidak bisa edit)';
+            roleBadge.className = 'badge view-badge';
+            authForm.style.display = 'flex';
+            logoutBtn.style.display = 'none';
+            ubahPeriodeBtn.disabled = true;
+            resetBtn.disabled = true;
+            contohBtn.disabled = true;
+            tglMulai.disabled = true;
+        }
+    }
+
+    // ======================= TAB & INIT =======================
+    function initTabs() {
+        const tabs = document.querySelectorAll('.tab-btn');
+        const panes = document.querySelectorAll('.tab-pane');
+        tabs.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.getAttribute('data-tab');
+                panes.forEach(pane => pane.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+                tabs.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+    }
+
+    window.onload = async () => {
+        initTabs();
+        await checkSession();
+        await loadAllData();
+        renderAll();
+        document.getElementById('loginBtn').onclick = login;
+        document.getElementById('logoutBtn').onclick = logout;
+        document.getElementById('ubahPeriodeBtn').onclick = ubahPeriode;
+        document.getElementById('resetBtn').onclick = resetAll;
+        document.getElementById('contohBtn').onclick = contohVariasi;
+    };
+</script>
+</body>
+</html>
