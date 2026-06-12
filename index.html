@@ -6,7 +6,7 @@
 <title>Absensi Karyawan — Toko</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-/* (SEMUA CSS SAMA PERSIS SEPERTI SEBELUMNYA) */
+/* (SEMUA CSS SAMA PERSIS SEPERTI SEBELUMNYA - TIDAK ADA PERUBAHAN) */
 :root{
   --bg:#f7f8fa;--surface:#fff;--border:#e5e7eb;--border2:#d1d5db;
   --text:#111827;--muted:#6b7280;--accent:#4f46e5;--accent2:#6366f1;
@@ -170,12 +170,12 @@ tr:hover td{background:#f9fafb}
   <div class="tab-content" id="tab-rekap">
     <div class="toolbar">
       <input type="text" id="search-rekap" placeholder="🔍 Cari nama…" oninput="renderRekap()" style="width:220px">
-      <span style="font-size:12px;color:var(--muted);margin-left:auto">Gaji Pokok: Rp 2.300.000 &nbsp;|&nbsp; Upah Lembur: Rp 10.000/jam &nbsp;|&nbsp; Bonus Full Lembur: Rp 50.000</span>
+      <span style="font-size:12px;color:var(--muted);margin-left:auto">Gaji Pokok: Rp 2.300.000 &nbsp;|&nbsp; Upah Lembur: Rp 10.000/jam &nbsp;|&nbsp; Bonus Full Lembur: Rp 50.000 &nbsp;|&nbsp; ⚠️ Potongan Otomatis Alpha/Izin: Rp88.000/hari</span>
     </div>
     <div class="table-wrap">
       <div class="loader" id="loader-rekap"><span class="spinner"></span>Memuat rekap gaji…</div>
       <table id="tbl-rekap" style="display:none">
-        <thead><tr><th>No</th><th class="col-left">Nama</th><th class="col-left">Jabatan</th><th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpha</th><th>Gaji Pokok</th><th>Jam Lembur</th><th>Upah Lembur</th><th>Full Lembur</th><th>Bonus</th><th>Potongan</th><th>Total Gaji</th><th id="th-aksi-rekap" style="display:none">Aksi</th></tr></thead>
+        <thead><tr><th>No</th><th class="col-left">Nama</th><th class="col-left">Jabatan</th><th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpha</th><th>Gaji Pokok</th><th>Jam Lembur</th><th>Upah Lembur</th><th>Full Lembur</th><th>Bonus</th><th>Potongan Manual</th><th>Total Gaji</th><th id="th-aksi-rekap" style="display:none">Aksi</th></tr></thead>
         <tbody id="tbody-rekap"></tbody>
         <tfoot id="tfoot-rekap"></tfoot>
       </table>
@@ -220,7 +220,7 @@ tr:hover td{background:#f9fafb}
       <div class="form-group"><label>Gaji Pokok (Rp)</label><input type="number" id="k-gapok" value="2300000" min="0"></div>
       <div class="form-group"><label>Jam Lembur</label><input type="number" id="k-lembur" value="0" min="0"></div>
       <div class="form-group"><label>Full Lembur?</label><select id="k-fl"><option value="T">Ya (T) — Bonus Rp 50.000</option><option value="F">Tidak (F)</option></select></div>
-      <div class="form-group"><label>Potongan (Rp)</label><input type="number" id="k-potongan" value="0" min="0"></div>
+      <div class="form-group"><label>Potongan Manual (Rp)</label><input type="number" id="k-potongan" value="0" min="0"></div>
     </div>
     <div class="absen-section">
       <label>Data Absensi 31 Hari (26 Mei – 25 Juni 2026)</label>
@@ -240,7 +240,7 @@ tr:hover td{background:#f9fafb}
     <input type="hidden" id="er-id">
     <div class="form-group"><label>Jam Lembur</label><input type="number" id="er-lembur" min="0" value="0"></div>
     <div class="form-group"><label>Full Lembur?</label><select id="er-fl"><option value="T">Ya (T) — Bonus Rp 50.000</option><option value="F">Tidak (F)</option></select></div>
-    <div class="form-group"><label>Potongan (Rp)</label><input type="number" id="er-potongan" min="0" value="0"></div>
+    <div class="form-group"><label>Potongan Manual (Rp)</label><input type="number" id="er-potongan" min="0" value="0"></div>
     <div class="form-actions">
       <button class="btn" style="border:1px solid var(--border2)" onclick="closeModal('modal-edit-rekap')">Batal</button>
       <button class="btn btn-primary" onclick="saveEditRekap()">💾 Simpan</button>
@@ -257,6 +257,7 @@ const ADMIN_PW  = 'momoyosetu123';
 const GAPOK_DEF = 2300000;
 const UPAH_JAM  = 10000;
 const BONUS_FL  = 50000;
+const POTONGAN_ALPHA_IZIN = 88000; // tambahan fitur otomatis
 const TABLE     = 'karyawan_absensi';
 
 const db = window.supabase.createClient(SUPA_URL, SUPA_ANON);
@@ -331,30 +332,22 @@ async function loadData() {
   if (error) { toast('Gagal memuat: ' + error.message, 'error'); return []; }
   return data || [];
 }
-
-// INSERT untuk data baru (tanpa id)
 async function insertKaryawan(row) {
   const { error } = await db.from(TABLE).insert([row]);
   return error;
 }
-
-// UPDATE untuk data existing (dengan id)
 async function updateKaryawan(id, row) {
   const { error } = await db.from(TABLE).update(row).eq('id', id);
   return error;
 }
-
-// UPDATE parsial untuk edit rekap
 async function updatePartial(id, changes) {
   const { error } = await db.from(TABLE).update(changes).eq('id', id);
   return error;
 }
-
 async function deleteById(id) {
   const { error } = await db.from(TABLE).delete().eq('id', id);
   return error;
 }
-
 async function reload() {
   allData = await loadData();
   updateSummary();
@@ -377,7 +370,7 @@ function updateSummary() {
   document.getElementById('s-gaji').textContent  = 'Rp ' + fmt(totalGaji);
 }
 
-// ─── RENDER FUNCTIONS (sama seperti sebelumnya) ──────────
+// ─── RENDER FUNCTIONS ──────────────────────────
 function renderAbsensi() {
   const q    = (document.getElementById('search-abs').value || '').toLowerCase();
   const rows = allData.filter(r => (r.nama||'').toLowerCase().includes(q));
@@ -388,7 +381,7 @@ function renderAbsensi() {
     const abs  = r.absensi || Array(31).fill('H');
     const H=cntS(r,'H'), I=cntS(r,'I'), S=cntS(r,'S'), A=cntS(r,'A');
     const isFL = r.full_lembur === 'T';
-    return `<tr class="${isFL ? 'row-fl' : ''}"><td>${i+1}</td><td class="col-left" style="font-weight:600">${esc(r.nama)}</td>${abs.map((s,di) => `<td class="${dates[di].isShift2 ? 'td-shift2' : ''}"><span class="badge badge-${s.toLowerCase()}">${s}</span></td>`).join('')}<td><span class="badge badge-h">${H}</span></td><td style="color:var(--accent)">${I}</td><td style="color:var(--warn)">${S}</td><td style="color:${A>0?'var(--danger)':'var(--muted)'};font-weight:${A>0?'700':'400'}">${A}</td><td>${r.jam_lembur||0}</td><td>${isFL ? '<span class="badge badge-fl">✓ Ya</span>' : '<span style="color:var(--muted)">—</span>'}</td>${isAdmin ? `<td><div class="action-btns"><button class="btn-edit" onclick="openModalKaryawan(${r.id})">✏️ Edit</button><button class="btn-del" onclick="hapus(${r.id})">🗑 Hapus</button></div></td>` : ''}</tr>`;
+    return `<tr class="${isFL ? 'row-fl' : ''}"><td>${i+1}</td><td class="col-left" style="font-weight:600">${esc(r.nama)}</td>${abs.map((s,di) => `<td class="${dates[di].isShift2 ? 'td-shift2' : ''}"><span class="badge badge-${s.toLowerCase()}">${s}</span></td>`).join('')}<td><span class="badge badge-h">${H}</span></td><td style="color:var(--accent)">${I}</td><td style="color:var(--warn)">${S}</td><td style="color:${A>0?'var(--danger)':'var(--muted)'};font-weight:${A>0?'700':'400'}">${A}</td><td>${r.jam_lembur||0}</td><td>${isFL ? '<span class="badge badge-fl">✓ Ya</span>' : '<span style="color:var(--muted)">—</span>'}</td>${isAdmin ? `<td><div class="action-btns"><button class="btn-edit" onclick="openModalKaryawan(${r.id})">✏️ Edit</button><button class="btn-del" onclick="hapus(${r.id})">🗑 Hapus</button></div></td>` : ''}</table>`;
   }).join('');
   document.getElementById('loader-abs').style.display = 'none';
   document.getElementById('tbl-abs').style.display = 'table';
@@ -401,19 +394,46 @@ function renderRekap() {
   const tfoot = document.getElementById('tfoot-rekap');
   const thAksi = document.getElementById('th-aksi-rekap');
   if (thAksi) thAksi.style.display = isAdmin ? '' : 'none';
-  let tGapok=0, tLemburRp=0, tBonus=0, tPotongan=0, tTotal=0;
+  let tGapok=0, tLemburRp=0, tBonus=0, tPotonganManual=0, tPotonganOtomatis=0, tTotal=0;
   tbody.innerHTML = rows.map((r,i) => {
     const H=cntS(r,'H'), I=cntS(r,'I'), S=cntS(r,'S'), A=cntS(r,'A');
     const gapok = r.gaji_pokok || GAPOK_DEF;
     const jam = r.jam_lembur || 0;
     const lemburRp = jam * UPAH_JAM;
     const bonus = r.full_lembur==='T' ? BONUS_FL : 0;
-    const pot = r.potongan || 0;
-    const total = calcGaji(r);
-    tGapok+=gapok; tLemburRp+=lemburRp; tBonus+=bonus; tPotongan+=pot; tTotal+=total;
-    return `<tr><td>${i+1}</td><td class="col-left" style="font-weight:600">${esc(r.nama)}</td><td class="col-left" style="color:var(--muted)">${esc(r.jabatan||'Karyawan')}</td><td><span class="badge badge-h">${H}</span></td><td style="color:var(--accent)">${I}</td><td style="color:var(--warn)">${S}</td><td style="color:${A>0?'var(--danger)':'var(--muted)'};font-weight:${A>0?'700':'400'}">${A}</td><td>Rp ${fmt(gapok)}</td><td>${jam} jam</td><td>Rp ${fmt(lemburRp)}</td><td>${r.full_lembur==='T' ? '<span class="badge badge-fl">Ya</span>' : '—'}</td><td style="color:var(--success)">Rp ${fmt(bonus)}</td><td style="color:${pot>0?'var(--danger)':'var(--muted)'}">Rp ${fmt(pot)}</td><td style="font-weight:700;color:var(--accent)">Rp ${fmt(total)}</td>${isAdmin ? `<td><button class="btn-edit btn-sm" onclick="openEditRekap(${r.id})">✏️ Edit</button></td>` : ''}</tr>`;
+    const potManual = r.potongan || 0;
+    const potOtomatis = (A + I) * POTONGAN_ALPHA_IZIN;
+    const total = gapok + lemburRp + bonus - potManual - potOtomatis;
+    tGapok+=gapok; tLemburRp+=lemburRp; tBonus+=bonus; tPotonganManual+=potManual; tPotonganOtomatis+=potOtomatis; tTotal+=total;
+    return `<tr>
+      <td>${i+1}</td>
+      <td class="col-left" style="font-weight:600">${esc(r.nama)}</td>
+      <td class="col-left" style="color:var(--muted)">${esc(r.jabatan||'Karyawan')}</td>
+      <td><span class="badge badge-h">${H}</span></td>
+      <td style="color:var(--accent)">${I}</td>
+      <td style="color:var(--warn)">${S}</td>
+      <td style="color:${A>0?'var(--danger)':'var(--muted)'};font-weight:${A>0?'700':'400'}">${A}</td>
+      <td>Rp ${fmt(gapok)}</td>
+      <td>${jam} jam</td>
+      <td>Rp ${fmt(lemburRp)}</td>
+      <td>${r.full_lembur==='T' ? '<span class="badge badge-fl">Ya</span>' : '—'}</td>
+      <td style="color:var(--success)">Rp ${fmt(bonus)}</td>
+      <td style="color:var(--danger)">Rp ${fmt(potManual)}<br><small class="text-muted" style="font-size:9px;">+ otomatis ${fmt(potOtomatis)}</small></td>
+      <td style="font-weight:700;color:var(--accent)">Rp ${fmt(total)}</td>
+      ${isAdmin ? `<td><button class="btn-edit btn-sm" onclick="openEditRekap(${r.id})">✏️ Edit</button></td>` : ''}
+    </tr>`;
   }).join('');
-  tfoot.innerHTML = `<tr class="total-row"><td colspan="7" style="text-align:right;font-weight:700">TOTAL</td><td>Rp ${fmt(tGapok)}</td><td>—</td><td>Rp ${fmt(tLemburRp)}</td><td>—</td><td>Rp ${fmt(tBonus)}</td><td>Rp ${fmt(tPotongan)}</td><td style="color:var(--accent)">Rp ${fmt(tTotal)}</td>${isAdmin ? '<td></td>' : ''}</tr>`;
+  tfoot.innerHTML = `<tr class="total-row">
+    <td colspan="7" style="text-align:right;font-weight:700">TOTAL</td>
+    <td>Rp ${fmt(tGapok)}</td>
+    <td>—</td>
+    <td>Rp ${fmt(tLemburRp)}</td>
+    <td>—</td>
+    <td>Rp ${fmt(tBonus)}</td>
+    <td>Rp ${fmt(tPotonganManual)}<br><small>+otomatis ${fmt(tPotonganOtomatis)}</small></td>
+    <td style="color:var(--accent)">Rp ${fmt(tTotal)}</td>
+    ${isAdmin ? '<td></td>' : ''}
+  </tr>`;
   document.getElementById('loader-rekap').style.display = 'none';
   document.getElementById('tbl-rekap').style.display = 'table';
 }
@@ -427,10 +447,25 @@ function renderSlip() {
     const jam = r.jam_lembur || 0;
     const lemburRp = jam * UPAH_JAM;
     const bonus = r.full_lembur==='T' ? BONUS_FL : 0;
-    const pot = r.potongan || 0;
-    const total = calcGaji(r);
+    const potManual = r.potongan || 0;
+    const A = cntS(r,'A'), I = cntS(r,'I');
+    const potOtomatis = (A + I) * POTONGAN_ALPHA_IZIN;
+    const total = gapok + lemburRp + bonus - potManual - potOtomatis;
     const H = cntS(r,'H');
-    return `<div class="slip-card"><div class="slip-header"><div class="sname">${esc(r.nama)}</div><div class="srole">${esc(r.jabatan||'Karyawan')} &nbsp;·&nbsp; Hadir ${H} hari</div></div><div class="slip-body"><div class="slip-row"><span class="slabel">Gaji Pokok</span><span>Rp ${fmt(gapok)}</span></div><div class="slip-row"><span class="slabel">Upah Lembur (${jam} jam)</span><span>Rp ${fmt(lemburRp)}</span></div><div class="slip-row"><span class="slabel">Bonus Full Lembur</span><span style="color:var(--success)">Rp ${fmt(bonus)}</span></div><div class="slip-row"><span class="slabel">Potongan</span><span style="color:var(--danger)">- Rp ${fmt(pot)}</span></div><div class="slip-row stotal"><span class="slabel">Total Gaji</span><span>Rp ${fmt(total)}</span></div></div></div>`;
+    return `<div class="slip-card">
+      <div class="slip-header">
+        <div class="sname">${esc(r.nama)}</div>
+        <div class="srole">${esc(r.jabatan||'Karyawan')} &nbsp;·&nbsp; Hadir ${H} hari</div>
+      </div>
+      <div class="slip-body">
+        <div class="slip-row"><span class="slabel">Gaji Pokok</span><span>Rp ${fmt(gapok)}</span></div>
+        <div class="slip-row"><span class="slabel">Upah Lembur (${jam} jam)</span><span>Rp ${fmt(lemburRp)}</span></div>
+        <div class="slip-row"><span class="slabel">Bonus Full Lembur</span><span style="color:var(--success)">Rp ${fmt(bonus)}</span></div>
+        <div class="slip-row"><span class="slabel">Potongan Manual</span><span style="color:var(--danger)">- Rp ${fmt(potManual)}</span></div>
+        <div class="slip-row"><span class="slabel">Potongan Alpha/Izin (${A+I} hr)</span><span style="color:var(--danger)">- Rp ${fmt(potOtomatis)}</span></div>
+        <div class="slip-row stotal"><span class="slabel">Total Gaji</span><span>Rp ${fmt(total)}</span></div>
+      </div>
+    </div>`;
   }).join('');
   document.getElementById('loader-slip').style.display = 'none';
   document.getElementById('slip-grid').style.display = 'grid';
@@ -478,11 +513,9 @@ async function saveKaryawan() {
   
   let err;
   if (editId) {
-    // Update: kirim id dan data lengkap (kecuali id sudah ada di row? jangan kirim id di row karena update pakai eq)
-    delete row.id; // pastikan tidak ada id di body update
+    delete row.id;
     err = await updateKaryawan(editId, row);
   } else {
-    // Insert: tanpa id
     err = await insertKaryawan(row);
   }
   
@@ -540,8 +573,11 @@ function calcGaji(r) {
   const gapok = r.gaji_pokok || GAPOK_DEF;
   const lemburRp = (r.jam_lembur || 0) * UPAH_JAM;
   const bonus = r.full_lembur === 'T' ? BONUS_FL : 0;
-  const pot = r.potongan || 0;
-  return gapok + lemburRp + bonus - pot;
+  const potManual = r.potongan || 0;
+  const jmlAlpha = cntS(r,'A');
+  const jmlIzin  = cntS(r,'I');
+  const potOtomatis = (jmlAlpha + jmlIzin) * POTONGAN_ALPHA_IZIN;
+  return gapok + lemburRp + bonus - potManual - potOtomatis;
 }
 function fmt(n)  { return (n||0).toLocaleString('id-ID'); }
 function esc(s)  { const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
