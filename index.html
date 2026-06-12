@@ -1,688 +1,716 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Sistem Absensi & Gaji - Cloud (Supabase)</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        * { box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f0f2f5;
-            margin: 0;
-            padding: 20px;
-            color: #1e293b;
-        }
-        .container {
-            max-width: 100%;
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            padding: 20px;
-            overflow-x: auto;
-        }
-        h1 { font-size: 1.6rem; margin: 0 0 10px 0; color: #0f3b5c; }
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e2e8f0;
-        }
-        .badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        .admin-badge { background: #16a34a; color: white; }
-        .view-badge { background: #f97316; color: white; }
-        .login-area {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        button, .btn {
-            background: #1e3a8a;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 40px;
-            cursor: pointer;
-            font-weight: bold;
-            margin: 4px;
-        }
-        button:disabled, .btn:disabled {
-            background: #94a3b8;
-            cursor: not-allowed;
-        }
-        .btn-logout { background: #b91c1c; }
-        .btn-login { background: #2c5f2d; }
-        .periode-control {
-            background: #eef2ff;
-            padding: 12px;
-            border-radius: 16px;
-            margin: 15px 0;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 12px;
-        }
-        .tab-buttons {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .tab-btn {
-            background: #e2e8f0;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 40px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .tab-btn.active {
-            background: #1e3a8a;
-            color: white;
-        }
-        .tab-pane {
-            display: none;
-        }
-        .tab-pane.active {
-            display: block;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            font-size: 12px;
-            min-width: 800px;
-            margin-top: 10px;
-        }
-        th, td {
-            border: 1px solid #cbd5e1;
-            padding: 6px 4px;
-            text-align: center;
-            vertical-align: middle;
-        }
-        th {
-            background: #e2e8f0;
-            position: sticky;
-            top: 0;
-        }
-        .bg-merah { background-color: #fee2e2 !important; }
-        select.status-select {
-            padding: 4px;
-            border-radius: 8px;
-            border: 1px solid #94a3b8;
-            width: 60px;
-        }
-        select:disabled { background: #f1f5f9; cursor: not-allowed; }
-        input.potongan {
-            width: 90px;
-            padding: 4px;
-            border-radius: 8px;
-            border: 1px solid #94a3b8;
-        }
-        input:disabled { background: #f1f5f9; cursor: not-allowed; }
-        .footer-note {
-            margin-top: 20px;
-            font-size: 12px;
-            background: #f8fafc;
-            padding: 10px;
-            border-radius: 12px;
-            line-height: 1.5;
-        }
-        .total-row { background: #f1f5f9; font-weight: bold; }
-        @media (max-width: 700px) {
-            body { padding: 10px; }
-            td, th { padding: 4px 2px; font-size: 10px; }
-            select.status-select { width: 50px; font-size: 10px; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Absensi Karyawan — Toko</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#f7f8fa;--surface:#fff;--border:#e5e7eb;--border2:#d1d5db;
+  --text:#111827;--muted:#6b7280;--accent:#4f46e5;--accent2:#6366f1;
+  --danger:#dc2626;--success:#16a34a;--warn:#ca8a04;
+  --shift2-bg:#fef2f2;--shift2-text:#991b1b;
+  --lembur-bg:#f5f3ff;--lembur-text:#4338ca;
+  --radius:8px;--shadow:0 1px 3px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+.nav-logo{font-weight:700;font-size:16px;color:var(--accent);letter-spacing:-.3px}
+.nav-right{display:flex;align-items:center;gap:10px}
+.badge-admin{background:var(--lembur-bg);color:var(--lembur-text);border:1px solid #c4b5fd;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+#btn-login,#btn-logout{padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text);transition:background .15s}
+#btn-login:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+#btn-logout{border-color:#fca5a5;color:var(--danger)}
+#btn-logout:hover{background:var(--danger);color:#fff;border-color:var(--danger)}
+
+main{max-width:1400px;margin:0 auto;padding:24px 16px}
+.page-header{margin-bottom:20px}
+.page-header h1{font-size:20px;font-weight:700}
+.page-header p{font-size:13px;color:var(--muted);margin-top:4px}
+
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.summary-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.summary-card .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.summary-card .value{font-size:22px;font-weight:700}
+
+.tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--surface);padding:6px;border-radius:var(--radius);border:1px solid var(--border);width:fit-content;flex-wrap:wrap}
+.tab{padding:7px 18px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);border:none;background:none;transition:all .15s}
+.tab.active{background:var(--accent);color:#fff}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.toolbar input,.toolbar select{padding:7px 12px;border:1px solid var(--border2);border-radius:6px;font-size:13px;color:var(--text);background:var(--surface);outline:none}
+.toolbar input:focus,.toolbar select:focus{border-color:var(--accent)}
+
+.btn{padding:7px 16px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2)}
+.btn-sm{padding:4px 10px;font-size:12px}
+
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:max-content}
+th{background:#f9fafb;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap;text-align:center}
+td{padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;text-align:center;vertical-align:middle;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f9fafb}
+.col-left{text-align:left!important}
+.th-shift2{background:#fde8e8!important;color:var(--shift2-text)!important}
+.td-shift2{background:var(--shift2-bg)}
+.row-fl td{background:var(--lembur-bg)}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+.badge-h{background:#dcfce7;color:#166534}
+.badge-i{background:#dbeafe;color:#1e40af}
+.badge-s{background:#fef9c3;color:#854d0e}
+.badge-a{background:#fee2e2;color:#991b1b}
+.badge-fl{background:var(--lembur-bg);color:var(--lembur-text)}
+.total-row td{background:#f0fdf4;font-weight:700;border-top:2px solid #86efac}
+
+.action-btns{display:flex;gap:6px;justify-content:center}
+.btn-edit{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;padding:4px 10px;border-radius:5px;font-size:12px;font-weight:500;cursor:pointer}
+.btn-edit:hover{background:#dbeafe}
+.btn-del{background:#fff1f2;color:var(--danger);border:1px solid #fecaca;padding:4px 10px;border-radius:5px;font-size:12px;font-weight:500;cursor:pointer}
+.btn-del:hover{background:#fee2e2}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:12px;padding:24px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.form-group input,.form-group select{width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:6px;font-size:13px;color:var(--text);background:var(--surface);outline:none}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+.absen-section{margin-top:16px}
+.absen-section label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px}
+.absen-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.absen-cell{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 2px;border-radius:4px}
+.absen-cell.is-shift2{background:var(--shift2-bg)}
+.absen-cell .day-label{font-size:9px;color:var(--muted);font-weight:500;line-height:1.2;text-align:center}
+.absen-cell.is-shift2 .day-label{color:var(--shift2-text)}
+.absen-cell select{width:48px;padding:3px 2px;font-size:11px;border:1px solid var(--border2);border-radius:4px;text-align:center;cursor:pointer}
+.absen-cell.is-shift2 select{border-color:#fca5a5}
+
+.login-modal{max-width:340px}
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:40px}
+.pw-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted)}
+.err-msg{color:var(--danger);font-size:12px;margin-top:6px;display:none}
+
+.toast{position:fixed;bottom:24px;right:24px;padding:11px 20px;border-radius:8px;font-size:13px;font-weight:500;z-index:999;transform:translateY(60px);opacity:0;transition:all .3s;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--success);color:#fff}
+.toast.error{background:var(--danger);color:#fff}
+.toast.info{background:#111;color:#fff}
+
+.loader{text-align:center;padding:48px;color:var(--muted);font-size:13px}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* SLIP */
+.slip-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.slip-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.slip-header{background:linear-gradient(135deg,var(--accent),var(--accent2));padding:16px;color:#fff}
+.slip-header .sname{font-size:15px;font-weight:700}
+.slip-header .srole{font-size:12px;opacity:.85;margin-top:2px}
+.slip-body{padding:14px}
+.slip-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)}
+.slip-row:last-child{border-bottom:none}
+.slip-row.stotal{font-weight:700;font-size:14px;color:var(--accent);padding-top:10px;margin-top:4px;border-top:2px solid var(--border)}
+.slip-row .slabel{color:var(--muted)}
+.slip-row.stotal .slabel{color:var(--accent)}
+
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-left:auto}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.leg-box{width:12px;height:12px;border-radius:2px}
+
+@media(max-width:600px){
+  .form-row{grid-template-columns:1fr}
+  .absen-grid{grid-template-columns:repeat(5,1fr)}
+  .tabs{gap:2px}
+  .tab{padding:6px 10px;font-size:12px}
+}
+</style>
 </head>
 <body>
-<div class="container">
-    <div class="top-bar">
-        <h1>📋 SISTEM ABSENSI & PENGAJIAN (CLOUD)</h1>
-        <div class="login-area">
-            <span id="roleBadge" class="badge view-badge">🔒 View Only</span>
-            <div id="authForm" style="display:flex; gap:8px;">
-                <input type="email" id="loginEmail" placeholder="Email admin" value="admin@toko.com" style="padding:6px; border-radius:20px; border:1px solid #ccc; width:150px;">
-                <input type="password" id="loginPassword" placeholder="Password" style="padding:6px; border-radius:20px; border:1px solid #ccc; width:120px;">
-                <button id="loginBtn" class="btn-login">Login</button>
-            </div>
-            <button id="logoutBtn" class="btn-logout" style="display:none;">Logout</button>
-        </div>
-    </div>
 
-    <div class="tab-buttons">
-        <button class="tab-btn active" data-tab="absensi">📆 Absensi (31 hari)</button>
-        <button class="tab-btn" data-tab="rekap">💰 Rekap Gaji</button>
-        <button class="tab-btn" data-tab="slip">🧾 Slip Gaji</button>
-    </div>
+<nav>
+  <div class="nav-logo">📋 Absensi Karyawan</div>
+  <div class="nav-right">
+    <span id="admin-badge" class="badge-admin" style="display:none">👑 Admin</span>
+    <button id="btn-login">Login Admin</button>
+    <button id="btn-logout" style="display:none">Keluar</button>
+  </div>
+</nav>
 
-    <!-- PANE ABSENSI -->
-    <div id="absensi" class="tab-pane active">
-        <div class="periode-control">
-            <label>📅 Tanggal Mulai (31 hari):</label>
-            <input type="date" id="tanggalMulai" value="2026-05-26">
-            <button id="ubahPeriodeBtn">Ubah Periode</button>
-            <button id="resetBtn">Reset Semua Jadi H</button>
-            <button id="contohBtn">Contoh Variasi (F)</button>
-        </div>
-        <div style="overflow-x: auto;">
-            <table id="tabelAbsensi">
-                <thead id="headerAbsensi"></thead>
-                <tbody id="bodyAbsensi"></tbody>
-            </table>
-        </div>
-        <div class="footer-note">
-            <strong>Kode:</strong> H=Hadir, I=Izin, S=Sakit, A=Alpha, F=Lembur (8 jam, upah Rp10.000/jam).<br>
-            Warna merah = Shift 2 (Jum/Sab/Minggu) - hanya penanda. <strong>Admin</strong> (login email admin@toko.com) dapat mengedit. Publik hanya melihat.
-        </div>
-    </div>
+<main>
+  <div class="page-header">
+    <h1>Absensi & Gaji Karyawan</h1>
+    <p>Periode: 26 Mei – 25 Juni 2026 &nbsp;·&nbsp; Data tersimpan di Supabase</p>
+  </div>
 
-    <!-- PANE REKAP GAJI -->
-    <div id="rekap" class="tab-pane">
-        <div style="overflow-x: auto;">
-            <table id="tabelRekap">
-                <thead>
-                    <tr><th>No</th><th>Nama</th><th>Jabatan</th><th>Total Hadir</th><th>Total Alpha</th><th>Hari F</th><th>Jam Lembur</th><th>Upah Lembur</th><th>Gaji Pokok</th><th>Tunjangan</th><th>Potongan (Rp)</th><th>Total Gaji</th></tr>
-                </thead>
-                <tbody id="bodyRekap"></tbody>
-                <tfoot id="footerRekap"></tfoot>
-            </table>
-        </div>
-        <div class="footer-note">
-            * Tunjangan khusus Aya = Rp300.000 (sudah termasuk).<br>
-            * Potongan hanya bisa diisi oleh admin yang sudah login.
-        </div>
-    </div>
+  <div class="summary-grid">
+    <div class="summary-card"><div class="label">Total Karyawan</div><div class="value" id="s-total" style="color:var(--accent)">—</div></div>
+    <div class="summary-card"><div class="label">Hadir Penuh</div><div class="value" id="s-hadir" style="color:var(--success)">—</div></div>
+    <div class="summary-card"><div class="label">Ada Alpha</div><div class="value" id="s-alpha" style="color:var(--danger)">—</div></div>
+    <div class="summary-card"><div class="label">Ada Sakit/Izin</div><div class="value" id="s-si" style="color:var(--warn)">—</div></div>
+    <div class="summary-card"><div class="label">Total Gaji</div><div class="value" id="s-gaji" style="color:var(--accent);font-size:15px">—</div></div>
+  </div>
 
-    <!-- PANE SLIP GAJI -->
-    <div id="slip" class="tab-pane">
-        <div style="overflow-x: auto;">
-            <table id="tabelSlip">
-                <thead>
-                    <tr><th>No</th><th>Nama</th><th>Jabatan</th><th>Total Hadir</th><th>Gaji Pokok</th><th>Tunjangan</th><th>Jam Lembur</th><th>Upah Lembur</th><th>Potongan</th><th>Total Gaji</th></tr>
-                </thead>
-                <tbody id="bodySlip"></tbody>
-                <tfoot id="footerSlip"></tfoot>
-            </table>
-        </div>
-        <div class="footer-note">
-            Slip gaji bersifat read-only, data diambil dari absensi dan potongan.
-        </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('absensi')">📅 Absensi</button>
+    <button class="tab" onclick="switchTab('rekap')">💰 Rekap Gaji</button>
+    <button class="tab" onclick="switchTab('slip')">🧾 Slip Gaji</button>
+  </div>
+
+  <!-- TAB ABSENSI -->
+  <div class="tab-content active" id="tab-absensi">
+    <div class="toolbar">
+      <input type="text" id="search-abs" placeholder="🔍 Cari nama karyawan…" oninput="renderAbsensi()" style="width:220px">
+      <div class="legend">
+        <div class="leg-item"><div class="leg-box" style="background:var(--shift2-bg);border:1px solid #fca5a5"></div>Shift 2 (Jum/Sab/Min)</div>
+        <div class="leg-item"><div class="leg-box" style="background:var(--lembur-bg);border:1px solid #c4b5fd"></div>Full Lembur</div>
+      </div>
+      <button class="btn btn-primary" id="btn-add" style="display:none;margin-left:auto" onclick="openModalKaryawan(null)">+ Tambah Karyawan</button>
     </div>
+    <div class="table-wrap">
+      <div class="loader" id="loader-abs"><span class="spinner"></span>Memuat data absensi…</div>
+      <table id="tbl-abs" style="display:none">
+        <thead id="thead-abs"></thead>
+        <tbody id="tbody-abs"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB REKAP -->
+  <div class="tab-content" id="tab-rekap">
+    <div class="toolbar">
+      <input type="text" id="search-rekap" placeholder="🔍 Cari nama…" oninput="renderRekap()" style="width:220px">
+      <span style="font-size:12px;color:var(--muted);margin-left:auto">Gaji Pokok: Rp 2.300.000 &nbsp;|&nbsp; Upah Lembur: Rp 10.000/jam &nbsp;|&nbsp; Bonus Full Lembur: Rp 50.000</span>
+    </div>
+    <div class="table-wrap">
+      <div class="loader" id="loader-rekap"><span class="spinner"></span>Memuat rekap gaji…</div>
+      <table id="tbl-rekap" style="display:none">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th class="col-left">Nama</th>
+            <th class="col-left">Jabatan</th>
+            <th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpha</th>
+            <th>Gaji Pokok</th>
+            <th>Jam Lembur</th>
+            <th>Upah Lembur</th>
+            <th>Full Lembur</th>
+            <th>Bonus</th>
+            <th>Potongan</th>
+            <th>Total Gaji</th>
+            <th id="th-aksi-rekap" style="display:none">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-rekap"></tbody>
+        <tfoot id="tfoot-rekap"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB SLIP -->
+  <div class="tab-content" id="tab-slip">
+    <div class="toolbar">
+      <input type="text" id="search-slip" placeholder="🔍 Cari nama…" oninput="renderSlip()" style="width:220px">
+    </div>
+    <div class="loader" id="loader-slip"><span class="spinner"></span>Memuat slip gaji…</div>
+    <div class="slip-grid" id="slip-grid" style="display:none"></div>
+  </div>
+</main>
+
+<!-- MODAL LOGIN -->
+<div class="modal-overlay" id="modal-login">
+  <div class="modal login-modal">
+    <h3>🔐 Login Admin</h3>
+    <div class="form-group">
+      <label>Password Admin</label>
+      <div class="pw-wrap">
+        <input type="password" id="pw-input" placeholder="Masukkan password…">
+        <button class="pw-toggle" onclick="togglePw()" type="button">👁</button>
+      </div>
+      <div class="err-msg" id="pw-err">❌ Password salah. Coba lagi.</div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" style="border:1px solid var(--border2)" onclick="closeModal('modal-login')">Batal</button>
+      <button class="btn btn-primary" onclick="doLogin()">Masuk</button>
+    </div>
+  </div>
 </div>
 
+<!-- MODAL TAMBAH/EDIT KARYAWAN -->
+<div class="modal-overlay" id="modal-karyawan">
+  <div class="modal" style="max-width:600px">
+    <h3 id="mk-title">Tambah Karyawan</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nama Lengkap</label>
+        <input type="text" id="k-nama" placeholder="Nama karyawan">
+      </div>
+      <div class="form-group">
+        <label>Jabatan</label>
+        <select id="k-jabatan">
+          <option value="Karyawan">Karyawan</option>
+          <option value="Kepala Toko">Kepala Toko</option>
+          <option value="Kasir">Kasir</option>
+          <option value="Gudang">Gudang</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Gaji Pokok (Rp)</label>
+        <input type="number" id="k-gapok" value="2300000" min="0">
+      </div>
+      <div class="form-group">
+        <label>Jam Lembur</label>
+        <input type="number" id="k-lembur" value="0" min="0">
+      </div>
+      <div class="form-group">
+        <label>Full Lembur?</label>
+        <select id="k-fl">
+          <option value="T">Ya (T) — Bonus Rp 50.000</option>
+          <option value="F">Tidak (F)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Potongan (Rp)</label>
+        <input type="number" id="k-potongan" value="0" min="0">
+      </div>
+    </div>
+    <div class="absen-section">
+      <label>Data Absensi 31 Hari (26 Mei – 25 Juni 2026)</label>
+      <div class="absen-grid" id="absen-grid"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" style="border:1px solid var(--border2)" onclick="closeModal('modal-karyawan')">Batal</button>
+      <button class="btn btn-primary" onclick="saveKaryawan()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDIT REKAP -->
+<div class="modal-overlay" id="modal-edit-rekap">
+  <div class="modal" style="max-width:400px">
+    <h3>Edit Rekap Gaji — <span id="er-nama"></span></h3>
+    <input type="hidden" id="er-id">
+    <div class="form-group">
+      <label>Jam Lembur</label>
+      <input type="number" id="er-lembur" min="0" value="0">
+    </div>
+    <div class="form-group">
+      <label>Full Lembur?</label>
+      <select id="er-fl">
+        <option value="T">Ya (T) — Bonus Rp 50.000</option>
+        <option value="F">Tidak (F)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Potongan (Rp)</label>
+      <input type="number" id="er-potongan" min="0" value="0">
+    </div>
+    <div class="form-actions">
+      <button class="btn" style="border:1px solid var(--border2)" onclick="closeModal('modal-edit-rekap')">Batal</button>
+      <button class="btn btn-primary" onclick="saveEditRekap()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
-    // ======================= KONFIGURASI SUPABASE =======================
-    const SUPABASE_URL = 'https://vfjclzelcaanbjppgtou.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmamNsemVsY2FhbmJqcHBndG91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExODMwOTgsImV4cCI6MjA5Njc1OTA5OH0.TqJAkZjsYaOinKApvjHWjxbXZ9Esb0cI7K6yy_HPuMw';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPA_URL  = 'https://vfjclzelcaanbjppgtou.supabase.co';
+const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmamNsemVsY2FhbmJqcHBndG91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExODMwOTgsImV4cCI6MjA5Njc1OTA5OH0.TqJAkZjsYaOinKApvjHWjxbXZ9Esb0cI7K6yy_HPuMw';
+const ADMIN_PW  = 'momoyosetu123';
+const GAPOK_DEF = 2300000;
+const UPAH_JAM  = 10000;
+const BONUS_FL  = 50000;
+const TABLE     = 'karyawan_absensi';
 
-    let isAdmin = false;
-    let karyawanList = [];
-    let tanggalList = [];
-    let currentStartDate = "2026-05-26";
-    let currentEndDate = "2026-06-25";
-    let absensiMap = new Map();   // key "karyawanId_tanggal" -> status
-    let potonganMap = new Map();  // key karyawanId -> nominal
+const db = window.supabase.createClient(SUPA_URL, SUPA_ANON);
 
-    // Helper: generate daftar tanggal
-    function generateTanggalList(start, end) {
-        let list = [];
-        let startDate = new Date(start);
-        let endDate = new Date(end);
-        let hariIndo = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
-        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-            let isRed = (d.getDay() === 5 || d.getDay() === 6 || d.getDay() === 0);
-            list.push({
-                dateStr: d.toISOString().slice(0,10),
-                tgl: d.getDate(),
-                hari: hariIndo[d.getDay()],
-                full: `${d.getDate()} ${hariIndo[d.getDay()]}`,
-                isRed
-            });
-        }
-        return list;
-    }
+let isAdmin  = false;
+let allData  = [];
+let editId   = null;
 
-    // Load data dari Supabase
-    async function loadAllData() {
-        try {
-            // 1. Ambil periode
-            let { data: periode, error: errPeriode } = await supabase.from('periode').select('*').limit(1);
-            if (!errPeriode && periode && periode.length > 0) {
-                currentStartDate = periode[0].start_date;
-                currentEndDate = periode[0].end_date;
-                document.getElementById('tanggalMulai').value = currentStartDate;
-            } else {
-                currentStartDate = "2026-05-26";
-                currentEndDate = "2026-06-25";
-            }
-            tanggalList = generateTanggalList(currentStartDate, currentEndDate);
+// ─── DATES ───────────────────────────────────────────────
+const HARI_SHORT = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+const dates = [];
+const START = new Date(2026, 4, 26);
+for (let i = 0; i < 31; i++) {
+  const d = new Date(START);
+  d.setDate(d.getDate() + i);
+  const dow = d.getDay();
+  dates.push({
+    tgl: d.getDate(), bln: d.getMonth()+1,
+    hari: HARI_SHORT[dow],
+    isShift2: [0,5,6].includes(dow)
+  });
+}
 
-            // 2. Ambil karyawan
-            let { data: karyawan, error: errKaryawan } = await supabase.from('karyawan').select('*').order('no');
-            if (errKaryawan) throw errKaryawan;
-            karyawanList = karyawan || [];
+// ─── AUTH ─────────────────────────────────────────────────
+document.getElementById('btn-login').onclick  = () => openModal('modal-login');
+document.getElementById('btn-logout').onclick = logout;
+document.getElementById('pw-input').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 
-            // 3. Ambil absensi untuk periode
-            let { data: absensiRows, error: errAbsensi } = await supabase
-                .from('absensi')
-                .select('*')
-                .gte('tanggal', currentStartDate)
-                .lte('tanggal', currentEndDate);
-            if (errAbsensi) throw errAbsensi;
-            absensiMap.clear();
-            for (let row of absensiRows) {
-                absensiMap.set(`${row.karyawan_id}_${row.tanggal}`, row.status);
-            }
+function doLogin() {
+  const pw = document.getElementById('pw-input').value.trim();
+  if (pw === ADMIN_PW) {
+    isAdmin = true;
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-err').style.display = 'none';
+    closeModal('modal-login');
+    updateAdminUI();
+    toast('Selamat datang, Admin! 👑', 'success');
+    reload(); // refresh data for security
+  } else {
+    document.getElementById('pw-err').style.display = 'block';
+  }
+}
 
-            // 4. Ambil potongan untuk periode
-            let { data: potonganRows, error: errPotongan } = await supabase
-                .from('potongan')
-                .select('*')
-                .eq('periode_start', currentStartDate)
-                .eq('periode_end', currentEndDate);
-            if (errPotongan) throw errPotongan;
-            potonganMap.clear();
-            for (let row of potonganRows) {
-                potonganMap.set(row.karyawan_id, row.nominal);
-            }
-            for (let k of karyawanList) {
-                if (!potonganMap.has(k.id)) potonganMap.set(k.id, 0);
-            }
-        } catch (e) {
-            console.error(e);
-            alert('Gagal memuat data. Pastikan koneksi internet dan Supabase aktif.');
-        }
-    }
+function logout() {
+  isAdmin = false;
+  updateAdminUI();
+  toast('Berhasil keluar.', 'info');
+  reload();
+}
 
-    // Update status absensi
-    async function updateAbsensi(karyawanId, tanggal, newStatus) {
-        if (!isAdmin) return false;
-        const { error } = await supabase.from('absensi').upsert({
-            karyawan_id: karyawanId,
-            tanggal: tanggal,
-            status: newStatus
-        }, { onConflict: 'karyawan_id, tanggal' });
-        if (error) { alert('Gagal menyimpan: ' + error.message); return false; }
-        absensiMap.set(`${karyawanId}_${tanggal}`, newStatus);
-        return true;
-    }
+function togglePw() {
+  const i = document.getElementById('pw-input');
+  i.type = i.type === 'password' ? 'text' : 'password';
+}
 
-    // Update potongan
-    async function updatePotongan(karyawanId, nominal) {
-        if (!isAdmin) return false;
-        const { error } = await supabase.from('potongan').upsert({
-            karyawan_id: karyawanId,
-            nominal: nominal,
-            periode_start: currentStartDate,
-            periode_end: currentEndDate
-        }, { onConflict: 'karyawan_id, periode_start, periode_end' });
-        if (error) { alert('Gagal menyimpan potongan: ' + error.message); return false; }
-        potonganMap.set(karyawanId, nominal);
-        return true;
-    }
+function updateAdminUI() {
+  const show = isAdmin;
+  document.getElementById('admin-badge').style.display = show ? 'inline-block' : 'none';
+  document.getElementById('btn-login').style.display   = show ? 'none' : 'inline-block';
+  document.getElementById('btn-logout').style.display  = show ? 'inline-block' : 'none';
+  document.getElementById('btn-add').style.display     = show ? 'inline-block' : 'none';
+  const thAksi = document.getElementById('th-aksi-rekap');
+  if (thAksi) thAksi.style.display = show ? '' : 'none';
+  renderAbsensi();
+  renderRekap();
+  renderSlip();
+}
 
-    // Update periode
-    async function updatePeriode(newStart, newEnd) {
-        if (!isAdmin) return false;
-        await supabase.from('periode').delete().neq('id', 0);
-        const { error } = await supabase.from('periode').insert({ start_date: newStart, end_date: newEnd });
-        if (error) { alert('Gagal mengubah periode: ' + error.message); return false; }
-        currentStartDate = newStart;
-        currentEndDate = newEnd;
-        tanggalList = generateTanggalList(currentStartDate, currentEndDate);
-        // Isi absensi untuk tanggal baru dengan 'H' jika belum ada
-        for (let k of karyawanList) {
-            for (let t of tanggalList) {
-                let key = `${k.id}_${t.dateStr}`;
-                if (!absensiMap.has(key)) {
-                    await updateAbsensi(k.id, t.dateStr, 'H');
-                }
-            }
-        }
-        return true;
-    }
+// ─── SUPABASE CRUD ────────────────────────────────────────
+async function loadData() {
+  const { data, error } = await db.from(TABLE).select('*').order('id');
+  if (error) { toast('Gagal memuat: ' + error.message, 'error'); return []; }
+  return data || [];
+}
 
-    // Reset semua ke H
-    async function resetAll() {
-        if (!isAdmin) return;
-        if (!confirm('Reset semua status menjadi H? Data potongan akan dipertahankan.')) return;
-        for (let k of karyawanList) {
-            for (let t of tanggalList) {
-                await updateAbsensi(k.id, t.dateStr, 'H');
-            }
-        }
-        renderAll();
-    }
+async function upsert(row) {
+  const { error } = await db.from(TABLE).upsert(row, { onConflict: 'id' });
+  return error;
+}
 
-    // Contoh variasi
-    async function contohVariasi() {
-        if (!isAdmin) return;
-        await resetAll();
-        let contoh = [
-            { karyawan_id:1, tanggal:'2026-05-29', st:'F' }, { karyawan_id:1, tanggal:'2026-06-05', st:'F' }, { karyawan_id:1, tanggal:'2026-06-10', st:'S' },
-            { karyawan_id:2, tanggal:'2026-05-31', st:'A' }, { karyawan_id:2, tanggal:'2026-06-01', st:'A' },
-            { karyawan_id:3, tanggal:'2026-06-03', st:'F' }, { karyawan_id:3, tanggal:'2026-06-04', st:'F' }, { karyawan_id:3, tanggal:'2026-06-15', st:'F' },
-            { karyawan_id:4, tanggal:'2026-06-07', st:'I' },
-            { karyawan_id:5, tanggal:'2026-06-13', st:'F' },
-            { karyawan_id:6, tanggal:'2026-06-17', st:'S' },
-            { karyawan_id:7, tanggal:'2026-06-20', st:'F' }, { karyawan_id:7, tanggal:'2026-06-21', st:'A' },
-            { karyawan_id:8, tanggal:'2026-06-09', st:'I' },
-            { karyawan_id:9, tanggal:'2026-06-24', st:'F' }, { karyawan_id:9, tanggal:'2026-06-25', st:'F' }
-        ];
-        for (let c of contoh) {
-            await updateAbsensi(c.karyawan_id, c.tanggal, c.st);
-        }
-        renderAll();
-    }
+async function updatePartial(id, changes) {
+  const { error } = await db.from(TABLE).update(changes).eq('id', id);
+  return error;
+}
 
-    async function ubahPeriode() {
-        if (!isAdmin) return;
-        let newStart = document.getElementById('tanggalMulai').value;
-        let newEnd = new Date(newStart);
-        newEnd.setDate(newEnd.getDate() + 30);
-        let endStr = newEnd.toISOString().slice(0,10);
-        await updatePeriode(newStart, endStr);
-        renderAll();
-    }
+async function deleteById(id) {
+  const { error } = await db.from(TABLE).delete().eq('id', id);
+  return error;
+}
 
-    // ======================= RENDER TABEL =======================
-    function renderAbsensi() {
-        if (!karyawanList.length || !tanggalList.length) return;
-        const thead = document.getElementById('headerAbsensi');
-        let headerRow = '<tr><th>No</th><th>Nama</th>';
-        for (let t of tanggalList) {
-            let redClass = t.isRed ? 'class="bg-merah"' : '';
-            headerRow += `<th ${redClass}>${t.full}</th>`;
-        }
-        headerRow += '<th>Total H</th><th>Total I</th><th>Total S</th><th>Total A</th><th>Total F</th></tr>';
-        thead.innerHTML = headerRow;
+async function reload() {
+  allData = await loadData();
+  updateSummary();
+  renderAbsensi();
+  renderRekap();
+  renderSlip();
+}
 
-        const tbody = document.getElementById('bodyAbsensi');
-        tbody.innerHTML = '';
-        for (let k of karyawanList) {
-            let row = document.createElement('tr');
-            row.appendChild(createTd(k.no));
-            row.appendChild(createTd(k.nama));
-            let hitung = {H:0, I:0, S:0, A:0, F:0};
-            for (let t of tanggalList) {
-                let key = `${k.id}_${t.dateStr}`;
-                let status = absensiMap.get(key) || 'H';
-                hitung[status]++;
-                let td = document.createElement('td');
-                let select = document.createElement('select');
-                select.className = 'status-select';
-                ['H','I','S','A','F'].forEach(opt => {
-                    let op = document.createElement('option');
-                    op.value = opt;
-                    op.textContent = opt;
-                    if (opt === status) op.selected = true;
-                    select.appendChild(op);
-                });
-                select.disabled = !isAdmin;
-                td.style.backgroundColor = getWarna(status);
-                if (t.isRed) td.classList.add('bg-merah');
-                select.onchange = (function(kid, tglStr, sel) {
-                    return async function() {
-                        if (!isAdmin) return;
-                        let newStatus = sel.value;
-                        await updateAbsensi(kid, tglStr, newStatus);
-                        renderAll();
-                    };
-                })(k.id, t.dateStr, select);
-                td.appendChild(select);
-                row.appendChild(td);
-            }
-            row.appendChild(createTd(hitung.H));
-            row.appendChild(createTd(hitung.I));
-            row.appendChild(createTd(hitung.S));
-            row.appendChild(createTd(hitung.A));
-            row.appendChild(createTd(hitung.F));
-            tbody.appendChild(row);
-        }
-    }
+// ─── SUMMARY ──────────────────────────────────────────────
+function updateSummary() {
+  const total      = allData.length;
+  const hadirPenuh = allData.filter(r => cntS(r,'A')===0 && cntS(r,'I')===0 && cntS(r,'S')===0).length;
+  const adaAlpha   = allData.filter(r => cntS(r,'A') > 0).length;
+  const adaSI      = allData.filter(r => cntS(r,'I') > 0 || cntS(r,'S') > 0).length;
+  const totalGaji  = allData.reduce((a,r) => a + calcGaji(r), 0);
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-hadir').textContent = hadirPenuh;
+  document.getElementById('s-alpha').textContent = adaAlpha;
+  document.getElementById('s-si').textContent    = adaSI;
+  document.getElementById('s-gaji').textContent  = 'Rp ' + fmt(totalGaji);
+}
 
-    function getWarna(s) {
-        if(s==='H') return '#dcfce7';
-        if(s==='I') return '#fef9c3';
-        if(s==='S') return '#fed7aa';
-        if(s==='A') return '#fecaca';
-        if(s==='F') return '#d9f99d';
-        return 'white';
-    }
+// ─── RENDER ABSENSI ───────────────────────────────────────
+function renderAbsensi() {
+  const q    = (document.getElementById('search-abs').value || '').toLowerCase();
+  const rows = allData.filter(r => (r.nama||'').toLowerCase().includes(q));
 
-    function createTd(txt) { let td = document.createElement('td'); td.textContent = txt; return td; }
+  const thead = document.getElementById('thead-abs');
+  const tbody = document.getElementById('tbody-abs');
 
-    function renderRekap() {
-        const tbody = document.getElementById('bodyRekap');
-        tbody.innerHTML = '';
-        let totalGapok=0, totalUpah=0, totalTunj=0, totalPot=0, totalAll=0;
-        for (let k of karyawanList) {
-            let hadir=0, alpha=0, jmlF=0;
-            for (let t of tanggalList) {
-                let st = absensiMap.get(`${k.id}_${t.dateStr}`) || 'H';
-                if (st === 'H') hadir++;
-                if (st === 'A') alpha++;
-                if (st === 'F') jmlF++;
-            }
-            let jamLembur = jmlF * 8;
-            let upahLembur = jamLembur * 10000;
-            let gapok = k.gapok;
-            let tunj = k.tunjangan;
-            let pot = potonganMap.get(k.id) || 0;
-            let total = gapok + upahLembur + tunj - pot;
-            totalGapok += gapok;
-            totalUpah += upahLembur;
-            totalTunj += tunj;
-            totalPot += pot;
-            totalAll += total;
+  thead.innerHTML = `<tr>
+    <th>No</th>
+    <th class="col-left" style="min-width:110px">Nama</th>
+    ${dates.map(d => `<th class="${d.isShift2 ? 'th-shift2' : ''}" style="min-width:40px">${d.tgl}<br><small>${d.hari}</small></th>`).join('')}
+    <th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpha</th>
+    <th>Jam Lembur</th><th>Full Lembur</th>
+    ${isAdmin ? '<th>Aksi</th>' : ''}
+  </table>`;
 
-            let row = document.createElement('tr');
-            row.appendChild(createTd(k.no));
-            row.appendChild(createTd(k.nama));
-            row.appendChild(createTd(k.jabatan));
-            row.appendChild(createTd(hadir));
-            row.appendChild(createTd(alpha));
-            row.appendChild(createTd(jmlF));
-            row.appendChild(createTd(jamLembur));
-            row.appendChild(createTd(formatRupiah(upahLembur)));
-            row.appendChild(createTd(formatRupiah(gapok)));
-            row.appendChild(createTd(formatRupiah(tunj)));
-            let tdPot = document.createElement('td');
-            let inp = document.createElement('input');
-            inp.type = 'number';
-            inp.value = pot;
-            inp.className = 'potongan';
-            inp.disabled = !isAdmin;
-            inp.onchange = (function(kid, input) {
-                return async function() {
-                    if (!isAdmin) return;
-                    let val = parseInt(input.value) || 0;
-                    await updatePotongan(kid, val);
-                    renderAll();
-                };
-            })(k.id, inp);
-            tdPot.appendChild(inp);
-            row.appendChild(tdPot);
-            row.appendChild(createTd(formatRupiah(total)));
-            tbody.appendChild(row);
-        }
-        const footer = document.getElementById('footerRekap');
-        footer.innerHTML = `<tr class="total-row">
-            <td colspan="5">TOTAL</td>
-            <td>${karyawanList.reduce((a,_,i)=> a + (tanggalList.filter(t=>absensiMap.get(`${karyawanList[i].id}_${t.dateStr}`)==='F').length),0)}</td>
-            <td>${karyawanList.reduce((a,_,i)=> a + (tanggalList.filter(t=>absensiMap.get(`${karyawanList[i].id}_${t.dateStr}`)==='F').length*8),0)}</td>
-            <td>${formatRupiah(totalUpah)}</td>
-            <td>${formatRupiah(totalGapok)}</td>
-            <td>${formatRupiah(totalTunj)}</td>
-            <td>${formatRupiah(totalPot)}</td>
-            <td>${formatRupiah(totalAll)}</td>
-        </tr>`;
-    }
+  tbody.innerHTML = rows.map((r, i) => {
+    const abs  = r.absensi || Array(31).fill('H');
+    const H=cntS(r,'H'), I=cntS(r,'I'), S=cntS(r,'S'), A=cntS(r,'A');
+    const isFL = r.full_lembur === 'T';
+    return `<tr class="${isFL ? 'row-fl' : ''}">
+      <td>${i+1}</td>
+      <td class="col-left" style="font-weight:600">${esc(r.nama)}</td>
+      ${abs.map((s,di) => `<td class="${dates[di].isShift2 ? 'td-shift2' : ''}">
+        <span class="badge badge-${s.toLowerCase()}">${s}</span>
+      </td>`).join('')}
+      <td><span class="badge badge-h">${H}</span></td>
+      <td style="color:var(--accent)">${I}</td>
+      <td style="color:var(--warn)">${S}</td>
+      <td style="color:${A>0?'var(--danger)':'var(--muted)'};font-weight:${A>0?'700':'400'}">${A}</td>
+      <td>${r.jam_lembur||0}</td>
+      <td>${isFL ? '<span class="badge badge-fl">✓ Ya</span>' : '<span style="color:var(--muted)">—</span>'}</td>
+      ${isAdmin ? `<td><div class="action-btns">
+        <button class="btn-edit" onclick="openModalKaryawan(${r.id})">✏️ Edit</button>
+        <button class="btn-del"  onclick="hapus(${r.id})">🗑 Hapus</button>
+      </div></td>` : ''}
+    </table>`;
+  }).join('');
 
-    function renderSlip() {
-        const tbody = document.getElementById('bodySlip');
-        tbody.innerHTML = '';
-        let totalGapok=0, totalTunj=0, totalJam=0, totalUpah=0, totalPot=0, totalAll=0;
-        for (let k of karyawanList) {
-            let hadir=0, jmlF=0;
-            for (let t of tanggalList) {
-                let st = absensiMap.get(`${k.id}_${t.dateStr}`) || 'H';
-                if (st === 'H') hadir++;
-                if (st === 'F') jmlF++;
-            }
-            let jam = jmlF * 8;
-            let upah = jam * 10000;
-            let total = k.gapok + upah + k.tunjangan - (potonganMap.get(k.id)||0);
-            totalGapok += k.gapok;
-            totalTunj += k.tunjangan;
-            totalJam += jam;
-            totalUpah += upah;
-            totalPot += (potonganMap.get(k.id)||0);
-            totalAll += total;
-            let row = document.createElement('tr');
-            row.appendChild(createTd(k.no));
-            row.appendChild(createTd(k.nama));
-            row.appendChild(createTd(k.jabatan));
-            row.appendChild(createTd(hadir));
-            row.appendChild(createTd(formatRupiah(k.gapok)));
-            row.appendChild(createTd(formatRupiah(k.tunjangan)));
-            row.appendChild(createTd(jam));
-            row.appendChild(createTd(formatRupiah(upah)));
-            row.appendChild(createTd(formatRupiah(potonganMap.get(k.id)||0)));
-            row.appendChild(createTd(formatRupiah(total)));
-            tbody.appendChild(row);
-        }
-        document.getElementById('footerSlip').innerHTML = `<tr class="total-row">
-            <td colspan="4">TOTAL</td>
-            <td>${formatRupiah(totalGapok)}</td>
-            <td>${formatRupiah(totalTunj)}</td>
-            <td>${totalJam}</td>
-            <td>${formatRupiah(totalUpah)}</td>
-            <td>${formatRupiah(totalPot)}</td>
-            <td>${formatRupiah(totalAll)}</td>
-        </tr>`;
-    }
+  document.getElementById('loader-abs').style.display = 'none';
+  document.getElementById('tbl-abs').style.display    = 'table';
+}
 
-    function formatRupiah(angka) { return 'Rp' + angka.toLocaleString('id-ID'); }
+// ─── RENDER REKAP ─────────────────────────────────────────
+function renderRekap() {
+  const q    = (document.getElementById('search-rekap').value || '').toLowerCase();
+  const rows = allData.filter(r => (r.nama||'').toLowerCase().includes(q));
 
-    async function renderAll() {
-        await loadAllData();
-        renderAbsensi();
-        renderRekap();
-        renderSlip();
-    }
+  const tbody = document.getElementById('tbody-rekap');
+  const tfoot = document.getElementById('tfoot-rekap');
+  const thAksi = document.getElementById('th-aksi-rekap');
+  if (thAksi) thAksi.style.display = isAdmin ? '' : 'none';
 
-    // ======================= AUTHENTIKASI =======================
-    async function login() {
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-            alert('Login gagal: ' + error.message);
-            return;
-        }
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user.email === 'admin@toko.com') {
-            isAdmin = true;
-            localStorage.setItem('supabaseSession', 'true');
-            updateUI();
-            await renderAll();
-        } else {
-            alert('Akun Anda tidak memiliki akses admin.');
-            await supabase.auth.signOut();
-        }
-    }
+  let tGapok=0, tLemburRp=0, tBonus=0, tPotongan=0, tTotal=0;
 
-    async function logout() {
-        await supabase.auth.signOut();
-        localStorage.removeItem('supabaseSession');
-        isAdmin = false;
-        updateUI();
-        await renderAll();
-    }
+  tbody.innerHTML = rows.map((r,i) => {
+    const H=cntS(r,'H'), I=cntS(r,'I'), S=cntS(r,'S'), A=cntS(r,'A');
+    const gapok    = r.gaji_pokok || GAPOK_DEF;
+    const jam      = r.jam_lembur || 0;
+    const lemburRp = jam * UPAH_JAM;
+    const bonus    = r.full_lembur==='T' ? BONUS_FL : 0;
+    const pot      = r.potongan || 0;
+    const total    = calcGaji(r);
+    tGapok+=gapok; tLemburRp+=lemburRp; tBonus+=bonus; tPotongan+=pot; tTotal+=total;
+    return `<tr>
+      <td>${i+1}</td>
+      <td class="col-left" style="font-weight:600">${esc(r.nama)}</td>
+      <td class="col-left" style="color:var(--muted)">${esc(r.jabatan||'Karyawan')}</td>
+      <td><span class="badge badge-h">${H}</span></td>
+      <td style="color:var(--accent)">${I}</td>
+      <td style="color:var(--warn)">${S}</td>
+      <td style="color:${A>0?'var(--danger)':'var(--muted)'};font-weight:${A>0?'700':'400'}">${A}</td>
+      <td>Rp ${fmt(gapok)}</td>
+      <td>${jam} jam</td>
+      <td>Rp ${fmt(lemburRp)}</td>
+      <td>${r.full_lembur==='T' ? '<span class="badge badge-fl">Ya</span>' : '—'}</td>
+      <td style="color:var(--success)">Rp ${fmt(bonus)}</td>
+      <td style="color:${pot>0?'var(--danger)':'var(--muted)'}">Rp ${fmt(pot)}</td>
+      <td style="font-weight:700;color:var(--accent)">Rp ${fmt(total)}</td>
+      ${isAdmin ? `<td><button class="btn-edit btn-sm" onclick="openEditRekap(${r.id})">✏️ Edit</button></td>` : ''}
+    </tr>`;
+  }).join('');
 
-    async function checkSession() {
-        const stored = localStorage.getItem('supabaseSession');
-        if (stored === 'true') {
-            const { data } = await supabase.auth.getSession();
-            if (data.session && data.session.user.email === 'admin@toko.com') {
-                isAdmin = true;
-            } else {
-                isAdmin = false;
-                localStorage.removeItem('supabaseSession');
-            }
-        } else {
-            isAdmin = false;
-        }
-        updateUI();
-    }
+  tfoot.innerHTML = `<tr class="total-row">
+    <td colspan="7" style="text-align:right;font-weight:700">TOTAL</td>
+    <td>Rp ${fmt(tGapok)}</td>
+    <td>—</td>
+    <td>Rp ${fmt(tLemburRp)}</td>
+    <td>—</td>
+    <td>Rp ${fmt(tBonus)}</td>
+    <td>Rp ${fmt(tPotongan)}</td>
+    <td style="color:var(--accent)">Rp ${fmt(tTotal)}</td>
+    ${isAdmin ? '<td></td>' : ''}
+  </td>`;
 
-    function updateUI() {
-        const roleBadge = document.getElementById('roleBadge');
-        const authForm = document.getElementById('authForm');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const ubahPeriodeBtn = document.getElementById('ubahPeriodeBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const contohBtn = document.getElementById('contohBtn');
-        const tglMulai = document.getElementById('tanggalMulai');
-        if (isAdmin) {
-            roleBadge.textContent = '👑 Admin (Full Akses)';
-            roleBadge.className = 'badge admin-badge';
-            authForm.style.display = 'none';
-            logoutBtn.style.display = 'inline-block';
-            ubahPeriodeBtn.disabled = false;
-            resetBtn.disabled = false;
-            contohBtn.disabled = false;
-            tglMulai.disabled = false;
-        } else {
-            roleBadge.textContent = '🔒 View Only (Tidak bisa edit)';
-            roleBadge.className = 'badge view-badge';
-            authForm.style.display = 'flex';
-            logoutBtn.style.display = 'none';
-            ubahPeriodeBtn.disabled = true;
-            resetBtn.disabled = true;
-            contohBtn.disabled = true;
-            tglMulai.disabled = true;
-        }
-    }
+  document.getElementById('loader-rekap').style.display = 'none';
+  document.getElementById('tbl-rekap').style.display    = 'table';
+}
 
-    // ======================= TAB & INIT =======================
-    function initTabs() {
-        const tabs = document.querySelectorAll('.tab-btn');
-        const panes = document.querySelectorAll('.tab-pane');
-        tabs.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tabId = btn.getAttribute('data-tab');
-                panes.forEach(pane => pane.classList.remove('active'));
-                document.getElementById(tabId).classList.add('active');
-                tabs.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-            });
-        });
-    }
+// ─── RENDER SLIP ──────────────────────────────────────────
+function renderSlip() {
+  const q    = (document.getElementById('search-slip').value || '').toLowerCase();
+  const rows = allData.filter(r => (r.nama||'').toLowerCase().includes(q));
+  const grid = document.getElementById('slip-grid');
 
-    window.onload = async () => {
-        initTabs();
-        await checkSession();
-        await renderAll();
-        document.getElementById('loginBtn').onclick = login;
-        document.getElementById('logoutBtn').onclick = logout;
-        document.getElementById('ubahPeriodeBtn').onclick = ubahPeriode;
-        document.getElementById('resetBtn').onclick = resetAll;
-        document.getElementById('contohBtn').onclick = contohVariasi;
-    };
+  grid.innerHTML = rows.map(r => {
+    const gapok    = r.gaji_pokok || GAPOK_DEF;
+    const jam      = r.jam_lembur || 0;
+    const lemburRp = jam * UPAH_JAM;
+    const bonus    = r.full_lembur==='T' ? BONUS_FL : 0;
+    const pot      = r.potongan || 0;
+    const total    = calcGaji(r);
+    const H        = cntS(r,'H');
+    return `<div class="slip-card">
+      <div class="slip-header">
+        <div class="sname">${esc(r.nama)}</div>
+        <div class="srole">${esc(r.jabatan||'Karyawan')} &nbsp;·&nbsp; Hadir ${H} hari</div>
+      </div>
+      <div class="slip-body">
+        <div class="slip-row"><span class="slabel">Gaji Pokok</span><span>Rp ${fmt(gapok)}</span></div>
+        <div class="slip-row"><span class="slabel">Upah Lembur (${jam} jam)</span><span>Rp ${fmt(lemburRp)}</span></div>
+        <div class="slip-row"><span class="slabel">Bonus Full Lembur</span><span style="color:var(--success)">Rp ${fmt(bonus)}</span></div>
+        <div class="slip-row"><span class="slabel">Potongan</span><span style="color:var(--danger)">- Rp ${fmt(pot)}</span></div>
+        <div class="slip-row stotal"><span class="slabel">Total Gaji</span><span>Rp ${fmt(total)}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('loader-slip').style.display = 'none';
+  document.getElementById('slip-grid').style.display   = 'grid';
+}
+
+// ─── MODAL KARYAWAN ───────────────────────────────────────
+function openModalKaryawan(id) {
+  if (!isAdmin) { toast('Hanya admin yang bisa mengubah data.', 'error'); return; }
+  editId = id;
+  const r = id ? allData.find(x => x.id === id) : null;
+  document.getElementById('mk-title').textContent = id ? 'Edit Karyawan' : 'Tambah Karyawan';
+  document.getElementById('k-nama').value     = r?.nama     || '';
+  document.getElementById('k-jabatan').value  = r?.jabatan  || 'Karyawan';
+  document.getElementById('k-gapok').value    = r?.gaji_pokok || GAPOK_DEF;
+  document.getElementById('k-lembur').value   = r?.jam_lembur || 0;
+  document.getElementById('k-fl').value       = r?.full_lembur || 'F';
+  document.getElementById('k-potongan').value = r?.potongan || 0;
+
+  const abs  = r?.absensi || Array(31).fill('H');
+  const grid = document.getElementById('absen-grid');
+  grid.innerHTML = dates.map((d, i) => `
+    <div class="absen-cell ${d.isShift2 ? 'is-shift2' : ''}">
+      <span class="day-label">${d.tgl}/${d.bln}<br>${d.hari}</span>
+      <select id="ab-${i}">
+        ${['H','I','S','A'].map(s => `<option value="${s}" ${abs[i]===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>`).join('');
+
+  openModal('modal-karyawan');
+}
+
+async function saveKaryawan() {
+  if (!isAdmin) return;
+  const nama = document.getElementById('k-nama').value.trim();
+  if (!nama) { toast('Nama tidak boleh kosong!', 'error'); return; }
+  const absensi = dates.map((_, i) => document.getElementById('ab-' + i).value);
+  const row = {
+    nama,
+    jabatan:     document.getElementById('k-jabatan').value,
+    gaji_pokok:  parseInt(document.getElementById('k-gapok').value)    || GAPOK_DEF,
+    jam_lembur:  parseInt(document.getElementById('k-lembur').value)   || 0,
+    full_lembur: document.getElementById('k-fl').value,
+    potongan:    parseInt(document.getElementById('k-potongan').value) || 0,
+    absensi,
+    periode: '26 Mei - 25 Juni 2026'
+  };
+  if (editId) row.id = editId;
+  const err = await upsert(row);
+  if (err) { toast('Gagal menyimpan: ' + err.message, 'error'); return; }
+  toast(editId ? 'Data karyawan diperbarui.' : 'Karyawan berhasil ditambahkan.', 'success');
+  closeModal('modal-karyawan');
+  await reload();
+}
+
+// ─── MODAL EDIT REKAP (diperbaiki dengan update parsial) ───
+function openEditRekap(id) {
+  if (!isAdmin) { toast('Hanya admin.', 'error'); return; }
+  editId = id;
+  const r = allData.find(x => x.id === id);
+  document.getElementById('er-id').value        = id;
+  document.getElementById('er-nama').textContent = r?.nama || '';
+  document.getElementById('er-lembur').value     = r?.jam_lembur || 0;
+  document.getElementById('er-fl').value         = r?.full_lembur || 'F';
+  document.getElementById('er-potongan').value   = r?.potongan || 0;
+  openModal('modal-edit-rekap');
+}
+
+async function saveEditRekap() {
+  if (!isAdmin) return;
+  const id = parseInt(document.getElementById('er-id').value);
+  const changes = {
+    jam_lembur:  parseInt(document.getElementById('er-lembur').value)   || 0,
+    full_lembur: document.getElementById('er-fl').value,
+    potongan:    parseInt(document.getElementById('er-potongan').value) || 0,
+  };
+  const err = await updatePartial(id, changes);
+  if (err) { toast('Gagal menyimpan: ' + err.message, 'error'); return; }
+  toast('Rekap gaji diperbarui.', 'success');
+  closeModal('modal-edit-rekap');
+  await reload();
+}
+
+// ─── HAPUS ────────────────────────────────────────────────
+async function hapus(id) {
+  if (!isAdmin) { toast('Hanya admin.', 'error'); return; }
+  const r = allData.find(x => x.id === id);
+  if (!confirm(`Hapus karyawan "${r?.nama}"?\nData absensi dan gaji akan ikut terhapus permanen.`)) return;
+  const err = await deleteById(id);
+  if (err) { toast('Gagal menghapus: ' + err.message, 'error'); return; }
+  toast('Data karyawan dihapus.', 'success');
+  await reload();
+}
+
+// ─── UTILS ────────────────────────────────────────────────
+function cntS(r, s) {
+  return (r.absensi || Array(31).fill('H')).filter(x => x === s).length;
+}
+function calcGaji(r) {
+  const gapok    = r.gaji_pokok || GAPOK_DEF;
+  const lemburRp = (r.jam_lembur || 0) * UPAH_JAM;
+  const bonus    = r.full_lembur === 'T' ? BONUS_FL : 0;
+  const pot      = r.potongan || 0;
+  return gapok + lemburRp + bonus - pot;
+}
+function fmt(n)  { return (n||0).toLocaleString('id-ID'); }
+function esc(s)  { const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+function toast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ['absensi','rekap','slip'][i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+(async () => {
+  allData = await loadData();
+  updateSummary();
+  renderAbsensi();
+  renderRekap();
+  renderSlip();
+})();
 </script>
 </body>
 </html>
