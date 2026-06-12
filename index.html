@@ -341,7 +341,7 @@ let isAdmin  = false;
 let allData  = [];
 let editId   = null;
 
-// ─── DATES ───────────────────────────────────────────────
+// ─── DATES (26 Mei - 25 Juni 2026) ───────────────────────
 const HARI_SHORT = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
 const dates = [];
 const START = new Date(2026, 4, 26);
@@ -370,7 +370,7 @@ function doLogin() {
     closeModal('modal-login');
     updateAdminUI();
     toast('Selamat datang, Admin! 👑', 'success');
-    reload(); // refresh data for security
+    reload();
   } else {
     document.getElementById('pw-err').style.display = 'block';
   }
@@ -539,7 +539,7 @@ function renderRekap() {
     <td>Rp ${fmt(tPotongan)}</td>
     <td style="color:var(--accent)">Rp ${fmt(tTotal)}</td>
     ${isAdmin ? '<td></td>' : ''}
-  </td>`;
+   </tr>`;
 
   document.getElementById('loader-rekap').style.display = 'none';
   document.getElementById('tbl-rekap').style.display    = 'table';
@@ -578,7 +578,7 @@ function renderSlip() {
   document.getElementById('slip-grid').style.display   = 'grid';
 }
 
-// ─── MODAL KARYAWAN ───────────────────────────────────────
+// ─── MODAL KARYAWAN (TAMBAH / EDIT) ──────────────────────
 function openModalKaryawan(id) {
   if (!isAdmin) { toast('Hanya admin yang bisa mengubah data.', 'error'); return; }
   editId = id;
@@ -608,7 +608,15 @@ async function saveKaryawan() {
   if (!isAdmin) return;
   const nama = document.getElementById('k-nama').value.trim();
   if (!nama) { toast('Nama tidak boleh kosong!', 'error'); return; }
-  const absensi = dates.map((_, i) => document.getElementById('ab-' + i).value);
+
+  // Kumpulkan absensi 31 hari
+  const absensi = [];
+  for (let i = 0; i < 31; i++) {
+    const select = document.getElementById('ab-' + i);
+    if (select) absensi.push(select.value);
+    else absensi.push('H');
+  }
+
   const row = {
     nama,
     jabatan:     document.getElementById('k-jabatan').value,
@@ -620,6 +628,7 @@ async function saveKaryawan() {
     periode: '26 Mei - 25 Juni 2026'
   };
   if (editId) row.id = editId;
+
   const err = await upsert(row);
   if (err) { toast('Gagal menyimpan: ' + err.message, 'error'); return; }
   toast(editId ? 'Data karyawan diperbarui.' : 'Karyawan berhasil ditambahkan.', 'success');
@@ -627,27 +636,30 @@ async function saveKaryawan() {
   await reload();
 }
 
-// ─── MODAL EDIT REKAP (diperbaiki dengan update parsial) ───
+// ─── MODAL EDIT REKAP (hanya ubah jam_lembur, full_lembur, potongan) ───
 function openEditRekap(id) {
   if (!isAdmin) { toast('Hanya admin.', 'error'); return; }
-  editId = id;
   const r = allData.find(x => x.id === id);
+  if (!r) { toast('Data tidak ditemukan', 'error'); return; }
   document.getElementById('er-id').value        = id;
-  document.getElementById('er-nama').textContent = r?.nama || '';
-  document.getElementById('er-lembur').value     = r?.jam_lembur || 0;
-  document.getElementById('er-fl').value         = r?.full_lembur || 'F';
-  document.getElementById('er-potongan').value   = r?.potongan || 0;
+  document.getElementById('er-nama').textContent = r.nama || '';
+  document.getElementById('er-lembur').value     = r.jam_lembur || 0;
+  document.getElementById('er-fl').value         = r.full_lembur || 'F';
+  document.getElementById('er-potongan').value   = r.potongan || 0;
   openModal('modal-edit-rekap');
 }
 
 async function saveEditRekap() {
   if (!isAdmin) return;
   const id = parseInt(document.getElementById('er-id').value);
+  if (!id) { toast('ID tidak valid', 'error'); return; }
+
   const changes = {
     jam_lembur:  parseInt(document.getElementById('er-lembur').value)   || 0,
     full_lembur: document.getElementById('er-fl').value,
     potongan:    parseInt(document.getElementById('er-potongan').value) || 0,
   };
+
   const err = await updatePartial(id, changes);
   if (err) { toast('Gagal menyimpan: ' + err.message, 'error'); return; }
   toast('Rekap gaji diperbarui.', 'success');
@@ -655,7 +667,7 @@ async function saveEditRekap() {
   await reload();
 }
 
-// ─── HAPUS ────────────────────────────────────────────────
+// ─── HAPUS KARYAWAN ───────────────────────────────────────
 async function hapus(id) {
   if (!isAdmin) { toast('Hanya admin.', 'error'); return; }
   const r = allData.find(x => x.id === id);
