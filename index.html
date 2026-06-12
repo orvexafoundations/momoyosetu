@@ -6,7 +6,7 @@
 <title>Absensi Karyawan — Toko</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-/* (SEMUA CSS SAMA PERSIS SEPERTI SEBELUMNYA - TIDAK ADA PERUBAHAN) */
+/* ========== CSS SAMA PERSIS SEPERTI SEBELUMNYA (tidak diubah) ========== */
 :root{
   --bg:#f7f8fa;--surface:#fff;--border:#e5e7eb;--border2:#d1d5db;
   --text:#111827;--muted:#6b7280;--accent:#4f46e5;--accent2:#6366f1;
@@ -59,7 +59,9 @@ tr:hover td{background:#f9fafb}
 .badge-h{background:#dcfce7;color:#166534}
 .badge-i{background:#dbeafe;color:#1e40af}
 .badge-s{background:#fef9c3;color:#854d0e}
+.badge-d{background:#d1fae5;color:#065f46}
 .badge-a{background:#fee2e2;color:#991b1b}
+.badge-l{background:#fed7aa;color:#9a3412}
 .badge-fl{background:var(--lembur-bg);color:var(--lembur-text)}
 .total-row td{background:#f0fdf4;font-weight:700;border-top:2px solid #86efac}
 .action-btns{display:flex;gap:6px;justify-content:center}
@@ -69,7 +71,7 @@ tr:hover td{background:#f9fafb}
 .btn-del:hover{background:#fee2e2}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
 .modal-overlay.open{display:flex}
-.modal{background:var(--surface);border-radius:12px;padding:24px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal{background:var(--surface);border-radius:12px;padding:24px;width:100%;max-width:650px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
 .modal h3{font-size:16px;font-weight:700;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border)}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .form-group{margin-bottom:14px}
@@ -79,13 +81,13 @@ tr:hover td{background:#f9fafb}
 .form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
 .absen-section{margin-top:16px}
 .absen-section label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px}
-.absen-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
-.absen-cell{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 2px;border-radius:4px}
+.absen-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.absen-cell{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border-radius:6px;background:white;border:1px solid var(--border2);box-shadow:0 1px 2px rgba(0,0,0,.05)}
 .absen-cell.is-shift2{background:var(--shift2-bg)}
-.absen-cell .day-label{font-size:9px;color:var(--muted);font-weight:500;line-height:1.2;text-align:center}
+.absen-cell .day-label{font-size:9px;color:var(--muted);font-weight:600;line-height:1.2;text-align:center}
 .absen-cell.is-shift2 .day-label{color:var(--shift2-text)}
-.absen-cell select{width:48px;padding:3px 2px;font-size:11px;border:1px solid var(--border2);border-radius:4px;text-align:center;cursor:pointer}
-.absen-cell.is-shift2 select{border-color:#fca5a5}
+.absen-cell select{width:60px;padding:3px 2px;font-size:11px;border:1px solid var(--border2);border-radius:4px;text-align:center;cursor:pointer}
+.absen-cell input{width:55px;padding:3px 2px;font-size:11px;border:1px solid var(--border2);border-radius:4px;text-align:center}
 .login-modal{max-width:340px}
 .pw-wrap{position:relative}
 .pw-wrap input{padding-right:40px}
@@ -113,16 +115,73 @@ tr:hover td{background:#f9fafb}
 .legend{display:flex;flex-wrap:wrap;gap:8px;margin-left:auto}
 .leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
 .leg-box{width:12px;height:12px;border-radius:2px}
-.absen-edit-select{width:46px;padding:2px 1px;font-size:10px;border:1px solid var(--border2);border-radius:4px;text-align:center;cursor:pointer;font-weight:600;background:var(--surface)}
+.absen-edit-select{width:55px;padding:3px 1px;font-size:10px;border:1px solid var(--border2);border-radius:4px;text-align:center;cursor:pointer;font-weight:600;background:var(--surface)}
 .absen-edit-select.val-H{background:#dcfce7;color:#166534;border-color:#bbf7d0}
 .absen-edit-select.val-I{background:#dbeafe;color:#1e40af;border-color:#bfdbfe}
 .absen-edit-select.val-S{background:#fef9c3;color:#854d0e;border-color:#fef08a}
+.absen-edit-select.val-D{background:#d1fae5;color:#065f46;border-color:#a7f3d0}
 .absen-edit-select.val-A{background:#fee2e2;color:#991b1b;border-color:#fecaca}
+.absen-edit-select.val-L{background:#fed7aa;color:#9a3412;border-color:#fdba74}
+.absen-lembur-input{width:50px;padding:2px 2px;font-size:10px;text-align:center}
 @media(max-width:600px){
   .form-row{grid-template-columns:1fr}
   .absen-grid{grid-template-columns:repeat(5,1fr)}
   .tabs{gap:2px}
   .tab{padding:6px 10px;font-size:12px}
+}
+/* Panel informasi tambahan */
+.info-panel {
+  background: var(--surface);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  margin-bottom: 24px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+.info-title {
+  background: #f1f5f9;
+  padding: 12px 18px;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--accent);
+}
+.info-icon { font-size: 18px; }
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 8px;
+  padding: 16px 18px;
+  background: var(--bg);
+}
+.info-card {
+  background: white;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  border: 1px solid #edf2f7;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  color: var(--text);
+  transition: all 0.1s;
+}
+.info-card strong {
+  display: inline-block;
+  min-width: 28px;
+  font-weight: 700;
+  color: var(--accent);
+  background: #eef2ff;
+  border-radius: 20px;
+  padding: 2px 8px;
+  margin-right: 8px;
+  font-size: 11px;
+  text-align: center;
+}
+.info-card:hover {
+  border-color: #cbd5e1;
+  background: #fefefe;
 }
 </style>
 </head>
@@ -143,6 +202,25 @@ tr:hover td{background:#f9fafb}
     <p>Periode: <span id="periode-range">26 Mei – 25 Juni 2026</span> &nbsp;·&nbsp; Data tersimpan di Supabase</p>
   </div>
 
+  <!-- PANEL INFORMASI -->
+  <div class="info-panel">
+    <div class="info-title"><span class="info-icon">📘</span> Panduan Penggunaan & Status Absensi</div>
+    <div class="info-grid">
+      <div class="info-card"><strong>H</strong> Hadir (tidak dipotong)</div>
+      <div class="info-card"><strong>I</strong> Izin (dipotong Rp <span id="info-potongan-tampil">88.000</span>/hari)</div>
+      <div class="info-card"><strong>S</strong> Sakit tanpa surat (dipotong)</div>
+      <div class="info-card"><strong>D</strong> Sakit surat dokter (tidak dipotong)</div>
+      <div class="info-card"><strong>A</strong> Alpha (dipotong)</div>
+      <div class="info-card"><strong>L</strong> Libur (dipotong)</div>
+      <div class="info-card"><strong>⏱️ Lembur</strong> Isi jam lembur per hari (0-12 jam), upah lembur sesuai pengaturan.</div>
+      <div class="info-card"><strong>📅 Periode</strong> 31 hari (bisa diubah admin).</div>
+      <div class="info-card"><strong>💰 Potongan</strong> Otomatis untuk Alpha/Izin/Libur/Sakit(-surat).</div>
+      <div class="info-card"><strong>📥 Backup</strong> Unduh CSV semua data + pengaturan.</div>
+      <div class="info-card"><strong>👑 Admin</strong> Login untuk mengedit absensi, lembur, periode, dan pengaturan.</div>
+      <div class="info-card"><strong>⚙️ Pengaturan</strong> Upah lembur & potongan dapat disesuaikan (hanya admin).</div>
+    </div>
+  </div>
+
   <div class="summary-grid">
     <div class="summary-card"><div class="label">Total Karyawan</div><div class="value" id="s-total" style="color:var(--accent)">—</div></div>
     <div class="summary-card"><div class="label">Hadir Penuh</div><div class="value" id="s-hadir" style="color:var(--success)">—</div></div>
@@ -161,32 +239,22 @@ tr:hover td{background:#f9fafb}
   <div class="tab-content active" id="tab-absensi">
     <div class="toolbar">
       <input type="text" id="search-abs" placeholder="🔍 Cari nama karyawan…" oninput="renderAbsensi()" style="width:220px">
-      
-      <!-- KONTROL EDIT PENGATURAN (hanya untuk admin) -->
       <div id="admin-settings" style="display:none; background:var(--surface); padding:8px 12px; border-radius:20px; border:1px solid var(--border2); gap:10px; align-items:center; display:flex; flex-wrap:wrap;">
         <span style="font-size:12px; color:var(--muted);">⚙️ Pengaturan:</span>
         <label style="font-size:11px;">Upah Lembur/jam</label>
-        <select id="upah-lembur-select" style="width:90px;">
-          <option value="10000">Rp 10.000</option>
-          <option value="20000">Rp 20.000</option>
-          <option value="30000">Rp 30.000</option>
-          <option value="50000">Rp 50.000</option>
-        </select>
-        <label style="font-size:11px;">Potongan Alpha/Izin/hari</label>
-        <input type="number" id="potongan-ai-input" value="88000" min="0" step="1000" style="width:100px;">
+        <select id="upah-lembur-select" style="width:90px;"><option value="10000">Rp 10.000</option><option value="20000">Rp 20.000</option><option value="30000">Rp 30.000</option><option value="50000">Rp 50.000</option></select>
+        <label style="font-size:11px;">Potongan Alpha/Izin/Libur/Sakit tanpa surat/hari</label>
+        <input type="number" id="potongan-ai-input" value="88000" min="0" step="1000" style="width:110px;">
         <button class="btn btn-sm btn-primary" onclick="simpanPengaturan()">💾 Simpan</button>
         <span style="width:1px; height:24px; background:var(--border2); margin:0 4px;"></span>
         <label style="font-size:11px;">Tanggal Mulai Periode</label>
         <input type="date" id="start-date-input" style="width:140px;">
         <button class="btn btn-sm btn-primary" onclick="ubahPeriode()">📅 Set Periode</button>
       </div>
-
       <div class="legend">
         <div class="leg-item"><div class="leg-box" style="background:var(--shift2-bg);border:1px solid #fca5a5"></div>Shift 2 (Jum/Sab/Min)</div>
         <div class="leg-item"><div class="leg-box" style="background:var(--lembur-bg);border:1px solid #c4b5fd"></div>Full Lembur</div>
       </div>
-      
-      <!-- Tombol Aksi: Tambah Karyawan & Backup Excel -->
       <div style="display:flex; gap:8px; margin-left:auto;">
         <button class="btn btn-primary" id="btn-add" style="display:none" onclick="openModalKaryawan(null)">+ Tambah Karyawan</button>
         <button class="btn btn-primary" id="btn-backup" onclick="exportToExcel()">📥 Backup Excel</button>
@@ -202,12 +270,12 @@ tr:hover td{background:#f9fafb}
   <div class="tab-content" id="tab-rekap">
     <div class="toolbar">
       <input type="text" id="search-rekap" placeholder="🔍 Cari nama…" oninput="renderRekap()" style="width:220px">
-      <span style="font-size:12px;color:var(--muted);margin-left:auto" id="info-upah-lembur">Gaji Pokok: Rp 2.300.000 &nbsp;|&nbsp; Upah Lembur: Rp 10.000/jam &nbsp;|&nbsp; Bonus Full Lembur: Rp 50.000 &nbsp;|&nbsp; ⚠️ Potongan Otomatis Alpha/Izin: Rp88.000/hari</span>
+      <span style="font-size:12px;color:var(--muted);margin-left:auto" id="info-upah-lembur"></span>
     </div>
     <div class="table-wrap">
       <div class="loader" id="loader-rekap"><span class="spinner"></span>Memuat rekap gaji…</div>
       <table id="tbl-rekap" style="display:none">
-        <thead><tr><th>No</th><th class="col-left">Nama</th><th class="col-left">Jabatan</th><th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpha</th><th>Gaji Pokok</th><th>Jam Lembur</th><th>Upah Lembur</th><th>Full Lembur</th><th>Bonus</th><th>Potongan Manual</th><th>Total Gaji</th><th id="th-aksi-rekap" style="display:none">Aksi</th></tr></thead>
+        <thead><tr><th>No</th><th class="col-left">Nama</th><th class="col-left">Jabatan</th><th>Hadir</th><th>Izin</th><th>Sakit (tanpa surat)</th><th>Sakit (dokter)</th><th>Alpha</th><th>Libur</th><th>Gaji Pokok</th><th>Jam Lembur</th><th>Upah Lembur</th><th>Full Lembur</th><th>Bonus</th><th>Potongan Manual</th><th>Total Gaji</th><th id="th-aksi-rekap" style="display:none">Aksi</th></tr></thead>
         <tbody id="tbody-rekap"></tbody>
         <tfoot id="tfoot-rekap"></tfoot>
       </table>
@@ -216,70 +284,37 @@ tr:hover td{background:#f9fafb}
 
   <!-- TAB SLIP GAJI -->
   <div class="tab-content" id="tab-slip">
-    <div class="toolbar">
-      <input type="text" id="search-slip" placeholder="🔍 Cari nama…" oninput="renderSlip()" style="width:220px">
-    </div>
+    <div class="toolbar"><input type="text" id="search-slip" placeholder="🔍 Cari nama…" oninput="renderSlip()" style="width:220px"></div>
     <div class="loader" id="loader-slip"><span class="spinner"></span>Memuat slip gaji…</div>
     <div class="slip-grid" id="slip-grid" style="display:none"></div>
   </div>
 </main>
 
 <!-- MODAL LOGIN -->
-<div class="modal-overlay" id="modal-login">
-  <div class="modal login-modal">
-    <h3>🔐 Login Admin</h3>
-    <div class="form-group">
-      <label>Password Admin</label>
-      <div class="pw-wrap">
-        <input type="password" id="pw-input" placeholder="Masukkan password…">
-        <button class="pw-toggle" onclick="togglePw()" type="button">👁</button>
-      </div>
-      <div class="err-msg" id="pw-err">❌ Password salah. Coba lagi.</div>
-    </div>
-    <div class="form-actions">
-      <button class="btn" style="border:1px solid var(--border2)" onclick="closeModal('modal-login')">Batal</button>
-      <button class="btn btn-primary" onclick="doLogin()">Masuk</button>
-    </div>
-  </div>
-</div>
+<div class="modal-overlay" id="modal-login"><div class="modal login-modal"><h3>🔐 Login Admin</h3><div class="form-group"><label>Password Admin</label><div class="pw-wrap"><input type="password" id="pw-input" placeholder="Masukkan password…"><button class="pw-toggle" onclick="togglePw()" type="button">👁</button></div><div class="err-msg" id="pw-err">❌ Password salah. Coba lagi.</div></div><div class="form-actions"><button class="btn" style="border:1px solid var(--border2)" onclick="closeModal('modal-login')">Batal</button><button class="btn btn-primary" onclick="doLogin()">Masuk</button></div></div></div>
 
 <!-- MODAL TAMBAH/EDIT KARYAWAN -->
 <div class="modal-overlay" id="modal-karyawan">
-  <div class="modal" style="max-width:600px">
+  <div class="modal" style="max-width:750px">
     <h3 id="mk-title">Tambah Karyawan</h3>
     <div class="form-row">
       <div class="form-group"><label>Nama Lengkap</label><input type="text" id="k-nama" placeholder="Nama karyawan"></div>
       <div class="form-group"><label>Jabatan</label><select id="k-jabatan"><option value="Karyawan">Karyawan</option><option value="Kepala Toko">Kepala Toko</option><option value="Kasir">Kasir</option><option value="Gudang">Gudang</option></select></div>
       <div class="form-group"><label>Gaji Pokok (Rp)</label><input type="number" id="k-gapok" value="2300000" min="0"></div>
-      <div class="form-group"><label>Jam Lembur</label><input type="number" id="k-lembur" value="0" min="0"></div>
+      <div class="form-group"><label>Jam Lembur (total tambahan)</label><input type="number" id="k-lembur" value="0" min="0"></div>
       <div class="form-group"><label>Full Lembur?</label><select id="k-fl"><option value="T">Ya (T) — Bonus Rp 50.000</option><option value="F">Tidak (F)</option></select></div>
       <div class="form-group"><label>Potongan Manual (Rp)</label><input type="number" id="k-potongan" value="0" min="0"></div>
     </div>
     <div class="absen-section">
-      <label>Data Absensi 31 Hari (sesuai periode)</label>
+      <label>Data Absensi & Lembur per Hari (status: H/I/S/D/A/L)</label>
       <div class="absen-grid" id="absen-grid"></div>
     </div>
-    <div class="form-actions">
-      <button class="btn" style="border:1px solid var(--border2)" onclick="closeModal('modal-karyawan')">Batal</button>
-      <button class="btn btn-primary" onclick="saveKaryawan()">💾 Simpan</button>
-    </div>
+    <div class="form-actions"><button class="btn" style="border:1px solid var(--border2)" onclick="closeModal('modal-karyawan')">Batal</button><button class="btn btn-primary" onclick="saveKaryawan()">💾 Simpan</button></div>
   </div>
 </div>
 
 <!-- MODAL EDIT REKAP -->
-<div class="modal-overlay" id="modal-edit-rekap">
-  <div class="modal" style="max-width:400px">
-    <h3>Edit Rekap Gaji — <span id="er-nama"></span></h3>
-    <input type="hidden" id="er-id">
-    <div class="form-group"><label>Jam Lembur</label><input type="number" id="er-lembur" min="0" value="0"></div>
-    <div class="form-group"><label>Full Lembur?</label><select id="er-fl"><option value="T">Ya (T) — Bonus Rp 50.000</option><option value="F">Tidak (F)</option></select></div>
-    <div class="form-group"><label>Potongan Manual (Rp)</label><input type="number" id="er-potongan" min="0" value="0"></div>
-    <div class="form-actions">
-      <button class="btn" style="border:1px solid var(--border2)" onclick="closeModal('modal-edit-rekap')">Batal</button>
-      <button class="btn btn-primary" onclick="saveEditRekap()">💾 Simpan</button>
-    </div>
-  </div>
-</div>
+<div class="modal-overlay" id="modal-edit-rekap"><div class="modal" style="max-width:400px"><h3>Edit Rekap Gaji — <span id="er-nama"></span></h3><input type="hidden" id="er-id"><div class="form-group"><label>Jam Lembur</label><input type="number" id="er-lembur" min="0" value="0"></div><div class="form-group"><label>Full Lembur?</label><select id="er-fl"><option value="T">Ya (T) — Bonus Rp 50.000</option><option value="F">Tidak (F)</option></select></div><div class="form-group"><label>Potongan Manual (Rp)</label><input type="number" id="er-potongan" min="0" value="0"></div><div class="form-actions"><button class="btn" style="border:1px solid var(--border2)" onclick="closeModal('modal-edit-rekap')">Batal</button><button class="btn btn-primary" onclick="saveEditRekap()">💾 Simpan</button></div></div></div>
 
 <div class="toast" id="toast"></div>
 
@@ -292,379 +327,310 @@ const BONUS_FL  = 50000;
 const TABLE     = 'karyawan_absensi';
 const TABLE_PENGATURAN = 'pengaturan';
 
-const db = window.supabase.createClient(SUPA_URL, SUPA_ANON);
+const db = supabase.createClient(SUPA_URL, SUPA_ANON);
 
-let isAdmin  = false;
-let allData  = [];
-let editId   = null;
-let dates    = []; // akan diisi berdasarkan startDate
+let isAdmin = false, allData = [], editId = null, dates = [];
+let UPAH_JAM = 10000, POTONGAN_ALPHA_IZIN = 88000;
+let START_DATE = new Date(2026, 4, 26);
 
-// Variabel dinamis dari Supabase
-let UPAH_JAM = 10000;
-let POTONGAN_ALPHA_IZIN = 88000;
-let START_DATE = new Date(2026, 4, 26); // default 26 Mei 2026
+const statusList = ['H','I','S','D','A','L'];
+function isPotongStatus(s) { return ['I','A','S','L'].includes(s); }
 
-// ─── GENERATE TANGGAL BERDASARKAN START_DATE ───────────────
 function generateDatesFromStart(start) {
   const HARI_SHORT = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
   const newDates = [];
-  for (let i = 0; i < 31; i++) {
-    const d = new Date(start);
-    d.setDate(d.getDate() + i);
+  for (let i=0;i<31;i++) {
+    const d = new Date(start); d.setDate(d.getDate()+i);
     const dow = d.getDay();
-    newDates.push({
-      tgl: d.getDate(), bln: d.getMonth()+1, tahun: d.getFullYear(),
-      hari: HARI_SHORT[dow],
-      isShift2: [0,5,6].includes(dow)
-    });
+    newDates.push({ tgl:d.getDate(), bln:d.getMonth()+1, tahun:d.getFullYear(), hari:HARI_SHORT[dow], isShift2:[0,5,6].includes(dow) });
   }
   return newDates;
 }
-
-function updatePeriodeDisplay() {
-  const start = dates[0];
-  const end = dates[30];
-  if (start && end) {
-    document.getElementById('periode-range').innerText = `${start.tgl}/${start.bln} – ${end.tgl}/${end.bln} ${end.tahun}`;
-  }
-}
-
-// ─── SIMPAN / MUAT START_DATE KE SUPABASE ─────────────────
+function updatePeriodeDisplay() { if(dates[0]) document.getElementById('periode-range').innerText = `${dates[0].tgl}/${dates[0].bln} – ${dates[30].tgl}/${dates[30].bln} ${dates[30].tahun}`; }
 async function loadStartDate() {
-  const { data, error } = await db.from(TABLE_PENGATURAN).select('value').eq('key', 'start_date').single();
-  if (data && !error) {
-    const savedDate = new Date(data.value);
-    if (!isNaN(savedDate.getTime())) {
-      START_DATE = savedDate;
-    }
-  }
+  const { data } = await db.from(TABLE_PENGATURAN).select('value').eq('key','start_date').single();
+  if(data?.value) { const sd = new Date(data.value); if(!isNaN(sd)) START_DATE = sd; }
   dates = generateDatesFromStart(START_DATE);
   document.getElementById('start-date-input').value = START_DATE.toISOString().slice(0,10);
   updatePeriodeDisplay();
 }
-
-async function simpanStartDate(newDate) {
-  const { error } = await db.from(TABLE_PENGATURAN).upsert({ key: 'start_date', value: newDate.toISOString() });
-  if (error) toast('Gagal simpan periode: ' + error.message, 'error');
-}
-
+async function simpanStartDate(d) { await db.from(TABLE_PENGATURAN).upsert({ key:'start_date', value:d.toISOString() }); }
 async function ubahPeriode() {
-  if (!isAdmin) { toast('Hanya admin yang dapat mengubah periode.', 'error'); return; }
-  const dateStr = document.getElementById('start-date-input').value;
-  if (!dateStr) return;
-  const newStart = new Date(dateStr);
-  if (isNaN(newStart.getTime())) { toast('Tanggal tidak valid', 'error'); return; }
+  if(!isAdmin) { toast('Hanya admin','error'); return; }
+  const newStart = new Date(document.getElementById('start-date-input').value);
+  if(isNaN(newStart)) return;
   START_DATE = newStart;
   dates = generateDatesFromStart(START_DATE);
   await simpanStartDate(START_DATE);
   updatePeriodeDisplay();
-  // Reload tampilan tanpa mengubah data absensi (karena urutan hari tetap)
-  renderAbsensi();
-  renderRekap();
-  renderSlip();
-  toast(`Periode diubah ke ${dateStr}`, 'success');
+  renderAbsensi(); renderRekap(); renderSlip();
+  toast('Periode diubah','success');
 }
-
-// ========== FUNGSI PENGATURAN (LOAD & SAVE) ==========
 async function loadPengaturan() {
   await loadStartDate();
-  const { data: dataLembur, error: errLembur } = await db.from(TABLE_PENGATURAN).select('value').eq('key', 'upah_lembur').single();
-  if (dataLembur && !errLembur) UPAH_JAM = parseInt(dataLembur.value);
-  const { data: dataPot, error: errPot } = await db.from(TABLE_PENGATURAN).select('value').eq('key', 'potongan_alpha_izin').single();
-  if (dataPot && !errPot) POTONGAN_ALPHA_IZIN = parseInt(dataPot.value);
-  
+  const { data:lembur } = await db.from(TABLE_PENGATURAN).select('value').eq('key','upah_lembur').single();
+  if(lembur) UPAH_JAM = parseInt(lembur.value);
+  const { data:pot } = await db.from(TABLE_PENGATURAN).select('value').eq('key','potongan_alpha_izin').single();
+  if(pot) POTONGAN_ALPHA_IZIN = parseInt(pot.value);
   document.getElementById('upah-lembur-select').value = UPAH_JAM;
   document.getElementById('potongan-ai-input').value = POTONGAN_ALPHA_IZIN;
+  const potSpan = document.getElementById('info-potongan-tampil');
+  if(potSpan) potSpan.innerText = fmt(POTONGAN_ALPHA_IZIN);
   updateInfoDisplay();
 }
-
 async function simpanPengaturan() {
-  if (!isAdmin) { toast('Hanya admin yang dapat mengubah pengaturan.', 'error'); return; }
-  const newUpah = parseInt(document.getElementById('upah-lembur-select').value);
-  const newPot = parseInt(document.getElementById('potongan-ai-input').value);
-  if (isNaN(newUpah) || isNaN(newPot) || newUpah <=0 || newPot <0) {
-    toast('Nilai tidak valid', 'error');
-    return;
-  }
-  const { error: err1 } = await db.from(TABLE_PENGATURAN).upsert({ key: 'upah_lembur', value: String(newUpah) });
-  const { error: err2 } = await db.from(TABLE_PENGATURAN).upsert({ key: 'potongan_alpha_izin', value: String(newPot) });
-  if (err1 || err2) {
-    toast('Gagal menyimpan: ' + (err1?.message || err2?.message), 'error');
-    return;
-  }
-  UPAH_JAM = newUpah;
-  POTONGAN_ALPHA_IZIN = newPot;
+  if(!isAdmin) return;
+  const up = parseInt(document.getElementById('upah-lembur-select').value);
+  const pt = parseInt(document.getElementById('potongan-ai-input').value);
+  if(isNaN(up)||isNaN(pt)) return;
+  await db.from(TABLE_PENGATURAN).upsert({ key:'upah_lembur', value:String(up) });
+  await db.from(TABLE_PENGATURAN).upsert({ key:'potongan_alpha_izin', value:String(pt) });
+  UPAH_JAM=up; POTONGAN_ALPHA_IZIN=pt;
+  const potSpan = document.getElementById('info-potongan-tampil');
+  if(potSpan) potSpan.innerText = fmt(POTONGAN_ALPHA_IZIN);
   updateInfoDisplay();
-  toast('Pengaturan berhasil disimpan ke Supabase!', 'success');
-  renderRekap();
-  renderSlip();
-  updateSummary();
+  renderRekap(); renderSlip(); updateSummary();
+  toast('Pengaturan disimpan','success');
 }
-
 function updateInfoDisplay() {
-  const infoSpan = document.getElementById('info-upah-lembur');
-  if (infoSpan) {
-    infoSpan.innerHTML = `Gaji Pokok: Rp 2.300.000 &nbsp;|&nbsp; Upah Lembur: Rp ${fmt(UPAH_JAM)}/jam &nbsp;|&nbsp; Bonus Full Lembur: Rp 50.000 &nbsp;|&nbsp; ⚠️ Potongan Otomatis Alpha/Izin: Rp ${fmt(POTONGAN_ALPHA_IZIN)}/hari`;
-  }
+  const span = document.getElementById('info-upah-lembur');
+  if(span) span.innerHTML = `Gaji Pokok: Rp 2.300.000 &nbsp;|&nbsp; Upah Lembur: Rp ${fmt(UPAH_JAM)}/jam &nbsp;|&nbsp; Bonus Full Lembur: Rp 50.000 &nbsp;|&nbsp; ⚠️ Potongan Alpha/Izin/Libur/Sakit(-surat): Rp ${fmt(POTONGAN_ALPHA_IZIN)}/hari`;
 }
-
-// ─── AUTH ─────────────────────────────────────────────────
-document.getElementById('btn-login').onclick  = () => openModal('modal-login');
-document.getElementById('btn-logout').onclick = logout;
-document.getElementById('pw-input').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
-
-function doLogin() {
-  const pw = document.getElementById('pw-input').value.trim();
-  if (pw === ADMIN_PW) {
-    isAdmin = true;
-    document.getElementById('pw-input').value = '';
-    document.getElementById('pw-err').style.display = 'none';
-    closeModal('modal-login');
-    updateAdminUI();
-    toast('Selamat datang, Admin! 👑', 'success');
-    reload();
-  } else {
-    document.getElementById('pw-err').style.display = 'block';
-  }
-}
-
-function logout() {
-  isAdmin = false;
-  updateAdminUI();
-  toast('Berhasil keluar.', 'info');
-  reload();
-}
-
-function togglePw() {
-  const i = document.getElementById('pw-input');
-  i.type = i.type === 'password' ? 'text' : 'password';
-}
-
+// AUTH
+document.getElementById('btn-login').onclick=()=>openModal('modal-login');
+document.getElementById('btn-logout').onclick=logout;
+function doLogin() { if(document.getElementById('pw-input').value===ADMIN_PW) { isAdmin=true; closeModal('modal-login'); updateAdminUI(); toast('Selamat datang Admin!','success'); reload(); } else document.getElementById('pw-err').style.display='block'; }
+function logout() { isAdmin=false; updateAdminUI(); toast('Keluar','info'); reload(); }
+function togglePw() { const i=document.getElementById('pw-input'); i.type=i.type==='password'?'text':'password'; }
 function updateAdminUI() {
-  const show = isAdmin;
-  document.getElementById('admin-badge').style.display = show ? 'inline-block' : 'none';
-  document.getElementById('btn-login').style.display   = show ? 'none' : 'inline-block';
-  document.getElementById('btn-logout').style.display  = show ? 'inline-block' : 'none';
-  document.getElementById('btn-add').style.display     = show ? 'inline-block' : 'none';
-  const adminSettingsDiv = document.getElementById('admin-settings');
-  if (adminSettingsDiv) adminSettingsDiv.style.display = show ? 'flex' : 'none';
-  const thAksi = document.getElementById('th-aksi-rekap');
-  if (thAksi) thAksi.style.display = show ? '' : 'none';
-  renderAbsensi();
-  renderRekap();
-  renderSlip();
+  const show=isAdmin;
+  document.getElementById('admin-badge').style.display=show?'inline-block':'none';
+  document.getElementById('btn-login').style.display=show?'none':'inline-block';
+  document.getElementById('btn-logout').style.display=show?'inline-block':'none';
+  document.getElementById('btn-add').style.display=show?'inline-block':'none';
+  document.getElementById('admin-settings').style.display=show?'flex':'none';
+  const th=document.getElementById('th-aksi-rekap'); if(th) th.style.display=show?'':'none';
+  renderAbsensi(); renderRekap(); renderSlip();
 }
-
-// ─── SUPABASE CRUD ────────────────────────────────────────
-async function loadData() {
-  const { data, error } = await db.from(TABLE).select('*').order('id');
-  if (error) { toast('Gagal memuat: ' + error.message, 'error'); return []; }
-  return data || [];
-}
-async function insertKaryawan(row) {
-  const { error } = await db.from(TABLE).insert([row]);
-  return error;
-}
-async function updateKaryawan(id, row) {
-  const { error } = await db.from(TABLE).update(row).eq('id', id);
-  return error;
-}
-async function updatePartial(id, changes) {
-  const { error } = await db.from(TABLE).update(changes).eq('id', id);
-  return error;
-}
-async function deleteById(id) {
-  const { error } = await db.from(TABLE).delete().eq('id', id);
-  return error;
-}
-async function reload() {
-  allData = await loadData();
-  updateSummary();
-  renderAbsensi();
-  renderRekap();
-  renderSlip();
-}
-
-// ─── SUMMARY ──────────────────────────────────────────────
+// CRUD
+async function loadData() { const {data,error}=await db.from(TABLE).select('*').order('id'); if(error){toast('Gagal memuat','error'); return [];} return data||[]; }
+async function insertKaryawan(row) { return (await db.from(TABLE).insert([row])).error; }
+async function updateKaryawan(id,row) { return (await db.from(TABLE).update(row).eq('id',id)).error; }
+async function updatePartial(id,changes) { return (await db.from(TABLE).update(changes).eq('id',id)).error; }
+async function deleteById(id) { return (await db.from(TABLE).delete().eq('id',id)).error; }
+async function reload() { allData = await loadData(); updateSummary(); renderAbsensi(); renderRekap(); renderSlip(); }
 function updateSummary() {
-  const total      = allData.length;
-  const hadirPenuh = allData.filter(r => cntS(r,'A')===0 && cntS(r,'I')===0 && cntS(r,'S')===0).length;
-  const adaAlpha   = allData.filter(r => cntS(r,'A') > 0).length;
-  const adaSI      = allData.filter(r => cntS(r,'I') > 0 || cntS(r,'S') > 0).length;
-  const totalGaji  = allData.reduce((a,r) => a + calcGaji(r), 0);
-  document.getElementById('s-total').textContent = total;
-  document.getElementById('s-hadir').textContent = hadirPenuh;
-  document.getElementById('s-alpha').textContent = adaAlpha;
-  document.getElementById('s-si').textContent    = adaSI;
-  document.getElementById('s-gaji').textContent  = 'Rp ' + fmt(totalGaji);
+  const total=allData.length;
+  const hadirPenuh = allData.filter(r=>cntPotong(r)===0).length;
+  const adaAlpha = allData.filter(r=>cntStatus(r,'A')>0).length;
+  const adaSI = allData.filter(r=>cntStatus(r,'I')>0||cntStatus(r,'S')>0).length;
+  const totalGaji = allData.reduce((a,r)=>a+calcGaji(r),0);
+  document.getElementById('s-total').textContent=total;
+  document.getElementById('s-hadir').textContent=hadirPenuh;
+  document.getElementById('s-alpha').textContent=adaAlpha;
+  document.getElementById('s-si').textContent=adaSI;
+  document.getElementById('s-gaji').textContent='Rp '+fmt(totalGaji);
 }
-
-// ─── RENDER FUNCTIONS ────────────────────────────────────
+function cntStatus(r,code) { return (r.absensi || Array(31).fill('H')).filter(x=>x===code).length; }
+function cntPotong(r) { const a=r.absensi||Array(31).fill('H'); return a.filter(s=>isPotongStatus(s)).length; }
+function totalJamLembur(r) { const lem = r.lembur_harian || Array(31).fill(0); return lem.reduce((a,b)=>a+(Number(b)||0),0); }
+function calcGaji(r) {
+  const gapok = r.gaji_pokok||GAPOK_DEF;
+  const jam = totalJamLembur(r) + (r.jam_lembur||0);
+  const lemburRp = jam * UPAH_JAM;
+  const bonus = r.full_lembur==='T'?BONUS_FL:0;
+  const potManual = r.potongan||0;
+  const hariPotong = cntPotong(r);
+  const potOtomatis = hariPotong * POTONGAN_ALPHA_IZIN;
+  return gapok + lemburRp + bonus - potManual - potOtomatis;
+}
+// RENDER ABSENSI
 function renderAbsensi() {
-  const q    = (document.getElementById('search-abs').value || '').toLowerCase();
-  const rows = allData.filter(r => (r.nama||'').toLowerCase().includes(q));
+  const q = (document.getElementById('search-abs').value||'').toLowerCase();
+  const rows = allData.filter(r=>r.nama.toLowerCase().includes(q));
   const thead = document.getElementById('thead-abs');
   const tbody = document.getElementById('tbody-abs');
-  thead.innerHTML = `<tr><th>No</th><th class="col-left" style="min-width:110px">Nama</th>${dates.map(d => `<th class="${d.isShift2 ? 'th-shift2' : ''}" style="min-width:40px">${d.tgl}<br><small>${d.hari}</small></th>`).join('')}<th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpha</th><th>Jam Lembur</th><th>Full Lembur</th>${isAdmin ? '<th>Aksi</th>' : ''}</tr>`;
-  tbody.innerHTML = rows.map((r, i) => {
-    const abs  = r.absensi || Array(31).fill('H');
-    const H=cntS(r,'H'), I=cntS(r,'I'), S=cntS(r,'S'), A=cntS(r,'A');
-    const isFL = r.full_lembur === 'T';
-    return `<tr class="${isFL ? 'row-fl' : ''}"><td>${i+1}</td><td class="col-left" style="font-weight:600">${esc(r.nama)}</td>${abs.map((s,di) => `<td class="${dates[di].isShift2 ? 'td-shift2' : ''}">${isAdmin ? `<select class="absen-edit-select val-${s}" onchange="updateAbsenCell(${r.id},${di},this)">${['H','I','S','A'].map(opt => `<option value="${opt}" ${s===opt?'selected':''}>${opt}</option>`).join('')}</select>` : `<span class="badge badge-${s.toLowerCase()}">${s}</span>`}</td>`).join('')}<td><span class="badge badge-h">${H}</span></td><td style="color:var(--accent)">${I}</td><td style="color:var(--warn)">${S}</td><td style="color:${A>0?'var(--danger)':'var(--muted)'};font-weight:${A>0?'700':'400'}">${A}</td><td>${r.jam_lembur||0}</td><td>${isFL ? '<span class="badge badge-fl">✓ Ya</span>' : '<span style="color:var(--muted)">—</span>'}</td>${isAdmin ? `<td><div class="action-btns"><button class="btn-edit" onclick="openModalKaryawan(${r.id})">✏️ Edit</button><button class="btn-del" onclick="hapus(${r.id})">🗑 Hapus</button></div></td>` : ''}</tr>`;
-  }).join('');
-  document.getElementById('loader-abs').style.display = 'none';
-  document.getElementById('tbl-abs').style.display = 'table';
-}
-
-// ─── EDIT LANGSUNG SEL ABSENSI ──────────────────────────
-async function updateAbsenCell(id, dayIndex, selectEl) {
-  if (!isAdmin) { toast('Hanya admin yang bisa mengubah data.', 'error'); return; }
-  const newVal = selectEl.value;
-  const r = allData.find(x => x.id === id);
-  if (!r) { toast('Data tidak ditemukan', 'error'); return; }
-
-  const oldAbs = r.absensi || Array(31).fill('H');
-  const newAbs = [...oldAbs];
-  newAbs[dayIndex] = newVal;
-
-  selectEl.className = 'absen-edit-select val-' + newVal;
-  r.absensi = newAbs;
-
-  const err = await updatePartial(id, { absensi: newAbs });
-  if (err) {
-    r.absensi = oldAbs;
-    selectEl.value = oldAbs[dayIndex];
-    selectEl.className = 'absen-edit-select val-' + oldAbs[dayIndex];
-    toast('Gagal menyimpan: ' + err.message, 'error');
-    return;
-  }
-
-  toast(`Absensi ${esc(r.nama)} (${dates[dayIndex].tgl}/${dates[dayIndex].bln}) → ${newVal}`, 'success');
-  renderAbsensi();
-  renderRekap();
-  renderSlip();
-  updateSummary();
-}
-
-function renderRekap() {
-  const q    = (document.getElementById('search-rekap').value || '').toLowerCase();
-  const rows = allData.filter(r => (r.nama||'').toLowerCase().includes(q));
-  const tbody = document.getElementById('tbody-rekap');
-  const tfoot = document.getElementById('tfoot-rekap');
-  const thAksi = document.getElementById('th-aksi-rekap');
-  if (thAksi) thAksi.style.display = isAdmin ? '' : 'none';
-  let tGapok=0, tLemburRp=0, tBonus=0, tPotonganManual=0, tPotonganOtomatis=0, tTotal=0;
-  tbody.innerHTML = rows.map((r,i) => {
-    const H=cntS(r,'H'), I=cntS(r,'I'), S=cntS(r,'S'), A=cntS(r,'A');
-    const gapok = r.gaji_pokok || GAPOK_DEF;
-    const jam = r.jam_lembur || 0;
-    const lemburRp = jam * UPAH_JAM;
-    const bonus = r.full_lembur==='T' ? BONUS_FL : 0;
-    const potManual = r.potongan || 0;
-    const potOtomatis = (A + I) * POTONGAN_ALPHA_IZIN;
-    const total = gapok + lemburRp + bonus - potManual - potOtomatis;
-    tGapok+=gapok; tLemburRp+=lemburRp; tBonus+=bonus; tPotonganManual+=potManual; tPotonganOtomatis+=potOtomatis; tTotal+=total;
+  thead.innerHTML = `<tr><th>No</th><th class="col-left">Nama</th>${dates.map(d=>`<th class="${d.isShift2?'th-shift2':''}" style="min-width:65px">${d.tgl}<br><small>${d.hari}</small></th>`).join('')}<th>Potong<br>(hari)</th><th>Jam<br>Lembur</th>${isAdmin?'<th>Aksi</th>':''}</tr>`;
+  tbody.innerHTML = rows.map((r,i)=>{
+    const abs = r.absensi || Array(31).fill('H');
+    const lem = r.lembur_harian || Array(31).fill(0);
+    const totalJam = totalJamLembur(r);
+    const potHari = cntPotong(r);
     return `<tr>
       <td>${i+1}</td>
       <td class="col-left" style="font-weight:600">${esc(r.nama)}</td>
-      <td class="col-left" style="color:var(--muted)">${esc(r.jabatan||'Karyawan')}</td>
-      <td><span class="badge badge-h">${H}</span></td>
-      <td style="color:var(--accent)">${I}</td>
-      <td style="color:var(--warn)">${S}</td>
-      <td style="color:${A>0?'var(--danger)':'var(--muted)'};font-weight:${A>0?'700':'400'}">${A}</td>
-      <td>Rp ${fmt(gapok)}</td>
-      <td>${jam} jam</td>
-      <td>Rp ${fmt(lemburRp)}</td>
-      <td>${r.full_lembur==='T' ? '<span class="badge badge-fl">Ya</span>' : '—'}</td>
-      <td style="color:var(--success)">Rp ${fmt(bonus)}</td>
-      <td style="color:var(--danger)">Rp ${fmt(potManual)}<br><small class="text-muted" style="font-size:9px;">+ otomatis ${fmt(potOtomatis)}</small></td>
-      <td style="font-weight:700;color:var(--accent)">Rp ${fmt(total)}</td>
-      ${isAdmin ? `<td><button class="btn-edit btn-sm" onclick="openEditRekap(${r.id})">✏️ Edit</button></td>` : ''}
+      ${dates.map((d,idx)=>`<td class="${d.isShift2?'td-shift2':''}" style="padding:4px 2px">
+        ${isAdmin ? `
+          <select class="absen-edit-select val-${abs[idx]}" onchange="updateAbsenCell(${r.id},${idx},this.value)">${statusList.map(s=>`<option value="${s}" ${abs[idx]===s?'selected':''}>${s}</option>`).join('')}</select><br>
+          <input type="number" class="absen-lembur-input" value="${lem[idx]||0}" min="0" max="12" step="1" onchange="updateLemburCell(${r.id},${idx},this.value)" style="width:48px; margin-top:3px;">
+        ` : `<span class="badge badge-${abs[idx].toLowerCase()}">${abs[idx]}</span><br><span style="font-size:9px">${lem[idx]?lem[idx]+'j':'—'}</span>`}
+      </td>`).join('')}
+      <td><span class="badge" style="background:#fef3c7">${potHari}</span></td>
+      <td><span class="badge badge-fl">${totalJam} jam</span></td>
+      ${isAdmin?`<td><div class="action-btns"><button class="btn-edit" onclick="openModalKaryawan(${r.id})">✏️</button><button class="btn-del" onclick="hapus(${r.id})">🗑</button></div></td>`:''}
     </tr>`;
   }).join('');
-  tfoot.innerHTML = `<tr class="total-row">
-    <td colspan="7" style="text-align:right;font-weight:700">TOTAL</td>
-    <td>Rp ${fmt(tGapok)}</td>
-    <td>—</td>
-    <td>Rp ${fmt(tLemburRp)}</td>
-    <td>—</td>
-    <td>Rp ${fmt(tBonus)}</td>
-    <td>Rp ${fmt(tPotonganManual)}<br><small>+otomatis ${fmt(tPotonganOtomatis)}</small></td>
-    <td style="color:var(--accent)">Rp ${fmt(tTotal)}</td>
-    ${isAdmin ? '<td></td>' : ''}
-   </tr>`;
-  document.getElementById('loader-rekap').style.display = 'none';
-  document.getElementById('tbl-rekap').style.display = 'table';
+  document.getElementById('loader-abs').style.display='none';
+  document.getElementById('tbl-abs').style.display='table';
 }
-
+async function updateAbsenCell(id,idx,val) {
+  if(!isAdmin) return;
+  const r = allData.find(x=>x.id===id);
+  if(!r) return;
+  const newAbs = [...(r.absensi||Array(31).fill('H'))];
+  newAbs[idx]=val;
+  r.absensi = newAbs;
+  const err = await updatePartial(id,{ absensi: newAbs });
+  if(err){ toast('Gagal simpan absen','error'); reload(); return; }
+  renderAbsensi(); renderRekap(); renderSlip(); updateSummary();
+  toast(`Absen ${r.nama} tgl ${dates[idx].tgl} → ${val}`,'success');
+}
+async function updateLemburCell(id,idx,val) {
+  if(!isAdmin) return;
+  const jam = Math.min(12, Math.max(0, parseInt(val)||0));
+  const r = allData.find(x=>x.id===id);
+  if(!r) return;
+  const newLem = [...(r.lembur_harian||Array(31).fill(0))];
+  newLem[idx]=jam;
+  r.lembur_harian = newLem;
+  const err = await updatePartial(id,{ lembur_harian: newLem });
+  if(err){ toast('Gagal simpan lembur','error'); reload(); return; }
+  renderAbsensi(); renderRekap(); renderSlip(); updateSummary();
+  toast(`Lembur ${r.nama} tgl ${dates[idx].tgl} → ${jam} jam`,'success');
+}
+function renderRekap() {
+  const q = (document.getElementById('search-rekap').value||'').toLowerCase();
+  const rows = allData.filter(r=>r.nama.toLowerCase().includes(q));
+  const tbody = document.getElementById('tbody-rekap');
+  const tfoot = document.getElementById('tfoot-rekap');
+  let tGapok=0,tJam=0,tLemburRp=0,tBonus=0,tPotManual=0,tPotOtomatis=0,tTotal=0;
+  tbody.innerHTML = rows.map((r,i)=>{
+    const gapok = r.gaji_pokok||GAPOK_DEF;
+    const jam = totalJamLembur(r)+(r.jam_lembur||0);
+    const lemburRp = jam*UPAH_JAM;
+    const bonus = r.full_lembur==='T'?BONUS_FL:0;
+    const potManual = r.potongan||0;
+    const potHari = cntPotong(r);
+    const potOtomatis = potHari*POTONGAN_ALPHA_IZIN;
+    const total = gapok+lemburRp+bonus-potManual-potOtomatis;
+    const H=cntStatus(r,'H'), I=cntStatus(r,'I'), S=cntStatus(r,'S'), D=cntStatus(r,'D'), A=cntStatus(r,'A'), L=cntStatus(r,'L');
+    tGapok+=gapok; tJam+=jam; tLemburRp+=lemburRp; tBonus+=bonus; tPotManual+=potManual; tPotOtomatis+=potOtomatis; tTotal+=total;
+    return `<tr>
+      <td>${i+1}</td>
+      <td class="col-left">${esc(r.nama)}</td>
+      <td class="col-left">${esc(r.jabatan||'Karyawan')}</td>
+      <td><span class="badge badge-h">${H}</span></td>
+      <td>${I}</td><td>${S}</td><td>${D}</td>
+      <td style="color:red">${A}</td><td>${L}</td>
+      <td>Rp ${fmt(gapok)}</td><td>${jam} jam</td><td>Rp ${fmt(lemburRp)}</td>
+      <td>${r.full_lembur==='T'?'<span class="badge badge-fl">Ya</span>':'—'}</td>
+      <td>Rp ${fmt(bonus)}</td>
+      <td>Rp ${fmt(potManual)}<br><small>-otomatis ${fmt(potOtomatis)}</small></td>
+      <td style="font-weight:700">Rp ${fmt(total)}</td>
+      ${isAdmin?`<td><button class="btn-edit" onclick="openEditRekap(${r.id})">✏️ Edit</button></td>`:''}
+    </tr>`;
+  }).join('');
+  tfoot.innerHTML = `<tr class="total-row"><td colspan="9" style="text-align:right">TOTAL</td>
+    <td>Rp ${fmt(tGapok)}</td><td>${tJam} jam</td><td>Rp ${fmt(tLemburRp)}</td><td>—</td>
+    <td>Rp ${fmt(tBonus)}</td>
+    <td>Rp ${fmt(tPotManual)}<br><small>+otomatis ${fmt(tPotOtomatis)}</small></td>
+    <td style="font-weight:700">Rp ${fmt(tTotal)}</td>${isAdmin?'<td></td>':''}</tr>`;
+  document.getElementById('loader-rekap').style.display='none';
+  document.getElementById('tbl-rekap').style.display='table';
+}
 function renderSlip() {
-  const q    = (document.getElementById('search-slip').value || '').toLowerCase();
-  const rows = allData.filter(r => (r.nama||'').toLowerCase().includes(q));
+  const q = (document.getElementById('search-slip').value||'').toLowerCase();
+  const rows = allData.filter(r=>r.nama.toLowerCase().includes(q));
   const grid = document.getElementById('slip-grid');
-  grid.innerHTML = rows.map(r => {
-    const gapok = r.gaji_pokok || GAPOK_DEF;
-    const jam = r.jam_lembur || 0;
-    const lemburRp = jam * UPAH_JAM;
-    const bonus = r.full_lembur==='T' ? BONUS_FL : 0;
-    const potManual = r.potongan || 0;
-    const A = cntS(r,'A'), I = cntS(r,'I');
-    const potOtomatis = (A + I) * POTONGAN_ALPHA_IZIN;
-    const total = gapok + lemburRp + bonus - potManual - potOtomatis;
-    const H = cntS(r,'H');
+  grid.innerHTML = rows.map(r=>{
+    const gapok = r.gaji_pokok||GAPOK_DEF;
+    const jam = totalJamLembur(r)+(r.jam_lembur||0);
+    const lemburRp = jam*UPAH_JAM;
+    const bonus = r.full_lembur==='T'?BONUS_FL:0;
+    const potManual = r.potongan||0;
+    const potHari = cntPotong(r);
+    const potOtomatis = potHari*POTONGAN_ALPHA_IZIN;
+    const total = gapok+lemburRp+bonus-potManual-potOtomatis;
+    const H=cntStatus(r,'H');
     return `<div class="slip-card">
-      <div class="slip-header">
-        <div class="sname">${esc(r.nama)}</div>
-        <div class="srole">${esc(r.jabatan||'Karyawan')} &nbsp;·&nbsp; Hadir ${H} hari</div>
-      </div>
+      <div class="slip-header"><div class="sname">${esc(r.nama)}</div><div class="srole">${esc(r.jabatan||'Karyawan')} · Hadir ${H} hari</div></div>
       <div class="slip-body">
         <div class="slip-row"><span class="slabel">Gaji Pokok</span><span>Rp ${fmt(gapok)}</span></div>
-        <div class="slip-row"><span class="slabel">Upah Lembur (${jam} jam @ Rp ${fmt(UPAH_JAM)})</span><span>Rp ${fmt(lemburRp)}</span></div>
-        <div class="slip-row"><span class="slabel">Bonus Full Lembur</span><span style="color:var(--success)">Rp ${fmt(bonus)}</span></div>
-        <div class="slip-row"><span class="slabel">Potongan Manual</span><span style="color:var(--danger)">- Rp ${fmt(potManual)}</span></div>
-        <div class="slip-row"><span class="slabel">Potongan Alpha/Izin (${A+I} hr)</span><span style="color:var(--danger)">- Rp ${fmt(potOtomatis)}</span></div>
+        <div class="slip-row"><span class="slabel">Upah Lembur (${jam} jam)</span><span>Rp ${fmt(lemburRp)}</span></div>
+        <div class="slip-row"><span class="slabel">Bonus Full Lembur</span><span>Rp ${fmt(bonus)}</span></div>
+        <div class="slip-row"><span class="slabel">Potongan Manual</span><span style="color:red">- Rp ${fmt(potManual)}</span></div>
+        <div class="slip-row"><span class="slabel">Potongan (${potHari} hari Alpha/Izin/Libur/Sakit(-surat))</span><span style="color:red">- Rp ${fmt(potOtomatis)}</span></div>
         <div class="slip-row stotal"><span class="slabel">Total Gaji</span><span>Rp ${fmt(total)}</span></div>
       </div>
     </div>`;
   }).join('');
-  document.getElementById('loader-slip').style.display = 'none';
-  document.getElementById('slip-grid').style.display = 'grid';
+  document.getElementById('loader-slip').style.display='none';
+  document.getElementById('slip-grid').style.display='grid';
 }
 
-// ─── EXPORT TO EXCEL ─────────────────────────────────────
+// ========== FUNGSI BACKUP EXCEL YANG DIPERBARUI ==========
 function exportToExcel() {
-  if (!allData.length) { toast('Tidak ada data untuk diekspor', 'error'); return; }
-  let headers = ['Nama', 'Jabatan', 'Gaji Pokok', 'Jam Lembur', 'Full Lembur', 'Potongan Manual'];
-  const dateHeaders = dates.map(d => `${d.tgl}/${d.bln}`);
-  headers.push(...dateHeaders);
-  headers.push('Hadir', 'Izin', 'Sakit', 'Alpha', 'Total Gaji');
-  const rows = allData.map(r => {
-    const abs = r.absensi || Array(31).fill('H');
-    const H = cntS(r,'H'), I = cntS(r,'I'), S = cntS(r,'S'), A = cntS(r,'A');
-    const total = calcGaji(r);
-    const row = [
-      r.nama, r.jabatan || 'Karyawan', r.gaji_pokok || GAPOK_DEF,
-      r.jam_lembur || 0, r.full_lembur === 'T' ? 'Ya' : 'Tidak', r.potongan || 0
-    ];
-    for (let i=0; i<dates.length; i++) row.push(abs[i] || 'H');
-    row.push(H, I, S, A, total);
-    return row;
+  if(!allData.length){ toast('Tidak ada data untuk diekspor','error'); return; }
+  // Helper untuk membuat baris CSV
+  const escapeCSV = (cell) => {
+    if (cell === undefined || cell === null) return '';
+    let str = String(cell).replace(/"/g, '""');
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) str = '"' + str + '"';
+    return str;
+  };
+  const rows = [];
+  // --- BAGIAN 1: REKAP GAJI ---
+  rows.push(['=== REKAP GAJI ===']);
+  // Header rekap
+  rows.push([
+    'No', 'Nama', 'Jabatan', 'Hadir', 'Izin', 'Sakit (tanpa surat)', 'Sakit (dokter)',
+    'Alpha', 'Libur', 'Gaji Pokok', 'Jam Lembur', 'Upah Lembur', 'Full Lembur',
+    'Bonus', 'Potongan Manual', 'Potongan Otomatis', 'Total Gaji'
+  ]);
+  // Data rekap
+  allData.forEach((r, idx) => {
+    const H = cntStatus(r,'H'), I = cntStatus(r,'I'), S = cntStatus(r,'S'), D = cntStatus(r,'D'), A = cntStatus(r,'A'), L = cntStatus(r,'L');
+    const gapok = r.gaji_pokok || GAPOK_DEF;
+    const jam = totalJamLembur(r) + (r.jam_lembur||0);
+    const lemburRp = jam * UPAH_JAM;
+    const bonus = r.full_lembur === 'T' ? BONUS_FL : 0;
+    const potManual = r.potongan || 0;
+    const potHari = cntPotong(r);
+    const potOtomatis = potHari * POTONGAN_ALPHA_IZIN;
+    const total = gapok + lemburRp + bonus - potManual - potOtomatis;
+    rows.push([
+      idx+1, r.nama, r.jabatan || 'Karyawan', H, I, S, D, A, L,
+      gapok, jam, lemburRp, r.full_lembur === 'T' ? 'Ya' : 'Tidak',
+      bonus, potManual, potOtomatis, total
+    ]);
   });
-  const metadataRows = [
-    ['', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
-    ['KETERANGAN PENGATURAN:', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
-    ['Upah Lembur per jam', UPAH_JAM, '', '', '', '', '', '', '', '', '', '', '', '', ''],
-    ['Potongan Alpha/Izin per hari', POTONGAN_ALPHA_IZIN, '', '', '', '', '', '', '', '', '', '', '', '', ''],
-    ['Bonus Full Lembur', BONUS_FL, '', '', '', '', '', '', '', '', '', '', '', '', ''],
-    ['Periode Mulai', `${dates[0]?.tgl}/${dates[0]?.bln}/${dates[0]?.tahun}`, '', '', '', '', '', '', '', '', '', '', '', '', ''],
-    ['Periode Akhir', `${dates[30]?.tgl}/${dates[30]?.bln}/${dates[30]?.tahun}`, '', '', '', '', '', '', '', '', '', '', '', '', '']
-  ];
-  const allRows = [...rows, ...metadataRows];
-  const csvContent = allRows.map(row => row.map(cell => {
-    if (cell === undefined || cell === null) cell = '';
-    let s = String(cell);
-    if (s.includes(',') || s.includes('"') || s.includes('\n')) s = '"' + s.replace(/"/g, '""') + '"';
-    return s;
-  }).join(',')).join('\n');
+  // Baris kosong pemisah
+  rows.push([]);
+  // --- BAGIAN 2: SLIP GAJI (ringkasan per karyawan) ---
+  rows.push(['=== SLIP GAJI ===']);
+  rows.push(['Nama', 'Jabatan', 'Gaji Pokok', 'Jam Lembur', 'Upah Lembur', 'Bonus', 'Potongan Manual', 'Potongan Otomatis', 'Total Gaji']);
+  allData.forEach(r => {
+    const gapok = r.gaji_pokok || GAPOK_DEF;
+    const jam = totalJamLembur(r) + (r.jam_lembur||0);
+    const lemburRp = jam * UPAH_JAM;
+    const bonus = r.full_lembur === 'T' ? BONUS_FL : 0;
+    const potManual = r.potongan || 0;
+    const potHari = cntPotong(r);
+    const potOtomatis = potHari * POTONGAN_ALPHA_IZIN;
+    const total = gapok + lemburRp + bonus - potManual - potOtomatis;
+    rows.push([r.nama, r.jabatan || 'Karyawan', gapok, jam, lemburRp, bonus, potManual, potOtomatis, total]);
+  });
+  // Baris kosong
+  rows.push([]);
+  // --- INFORMASI PENGATURAN ---
+  rows.push(['=== PENGATURAN ===']);
+  rows.push(['Upah Lembur per jam', UPAH_JAM]);
+  rows.push(['Potongan per hari (Alpha/Izin/Libur/Sakit tanpa surat)', POTONGAN_ALPHA_IZIN]);
+  rows.push(['Bonus Full Lembur', BONUS_FL]);
+  rows.push(['Periode Mulai', `${dates[0]?.tgl}/${dates[0]?.bln}/${dates[0]?.tahun}`]);
+  rows.push(['Periode Akhir', `${dates[30]?.tgl}/${dates[30]?.bln}/${dates[30]?.tahun}`]);
+  // Konversi ke CSV
+  const csvContent = rows.map(row => row.map(cell => escapeCSV(cell)).join(',')).join('\n');
   const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
@@ -674,143 +640,57 @@ function exportToExcel() {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-  toast('Backup berhasil diunduh!', 'success');
+  toast('Backup CSV berhasil diunduh (berisi Rekap Gaji & Slip Gaji)!', 'success');
 }
 
-// ─── MODAL KARYAWAN (TAMBAH / EDIT) ──────────────────────
+// MODAL KARYAWAN (sama seperti sebelumnya)
 function openModalKaryawan(id) {
-  if (!isAdmin) { toast('Hanya admin yang bisa mengubah data.', 'error'); return; }
-  editId = id;
-  const r = id ? allData.find(x => x.id === id) : null;
-  document.getElementById('mk-title').textContent = id ? 'Edit Karyawan' : 'Tambah Karyawan';
-  document.getElementById('k-nama').value     = r?.nama     || '';
-  document.getElementById('k-jabatan').value  = r?.jabatan  || 'Karyawan';
-  document.getElementById('k-gapok').value    = r?.gaji_pokok || GAPOK_DEF;
-  document.getElementById('k-lembur').value   = r?.jam_lembur || 0;
-  document.getElementById('k-fl').value       = r?.full_lembur || 'F';
-  document.getElementById('k-potongan').value = r?.potongan || 0;
-  const abs  = r?.absensi || Array(31).fill('H');
+  if(!isAdmin){toast('Hanya admin','error');return;}
+  editId=id; const r=id?allData.find(x=>x.id===id):null;
+  document.getElementById('mk-title').textContent=id?'Edit Karyawan':'Tambah Karyawan';
+  document.getElementById('k-nama').value=r?.nama||'';
+  document.getElementById('k-jabatan').value=r?.jabatan||'Karyawan';
+  document.getElementById('k-gapok').value=r?.gaji_pokok||GAPOK_DEF;
+  document.getElementById('k-lembur').value=r?.jam_lembur||0;
+  document.getElementById('k-fl').value=r?.full_lembur||'F';
+  document.getElementById('k-potongan').value=r?.potongan||0;
+  const abs = r?.absensi||Array(31).fill('H');
+  const lem = r?.lembur_harian||Array(31).fill(0);
   const grid = document.getElementById('absen-grid');
-  grid.innerHTML = dates.map((d, i) => `<div class="absen-cell ${d.isShift2 ? 'is-shift2' : ''}"><span class="day-label">${d.tgl}/${d.bln}<br>${d.hari}</span><select id="ab-${i}">${['H','I','S','A'].map(s => `<option value="${s}" ${abs[i]===s?'selected':''}>${s}</option>`).join('')}</select></div>`).join('');
+  grid.innerHTML = dates.map((d,i)=>`<div class="absen-cell ${d.isShift2?'is-shift2':''}">
+    <span class="day-label">${d.tgl}/${d.bln}<br>${d.hari}</span>
+    <select id="ab-${i}">${statusList.map(s=>`<option value="${s}" ${abs[i]===s?'selected':''}>${s}</option>`).join('')}</select>
+    <input type="number" id="lem-${i}" value="${lem[i]||0}" min="0" max="12" step="1" style="width:50px; font-size:10px;" placeholder="jam">
+  </div>`).join('');
   openModal('modal-karyawan');
 }
-
 async function saveKaryawan() {
-  if (!isAdmin) return;
+  if(!isAdmin) return;
   const nama = document.getElementById('k-nama').value.trim();
-  if (!nama) { toast('Nama tidak boleh kosong!', 'error'); return; }
-  const absensi = [];
-  for (let i = 0; i < 31; i++) {
-    const select = document.getElementById('ab-' + i);
-    absensi.push(select ? select.value : 'H');
-  }
-  const row = {
-    nama, jabatan: document.getElementById('k-jabatan').value,
-    gaji_pokok: parseInt(document.getElementById('k-gapok').value) || GAPOK_DEF,
-    jam_lembur: parseInt(document.getElementById('k-lembur').value) || 0,
-    full_lembur: document.getElementById('k-fl').value,
-    potongan: parseInt(document.getElementById('k-potongan').value) || 0,
-    absensi, periode: 'Dinamis'
-  };
+  if(!nama){toast('Nama wajib','error');return;}
+  const absensi=[], lembur_harian=[];
+  for(let i=0;i<31;i++){ absensi.push(document.getElementById(`ab-${i}`).value); lembur_harian.push(parseInt(document.getElementById(`lem-${i}`).value)||0); }
+  const row={ nama, jabatan:document.getElementById('k-jabatan').value, gaji_pokok:parseInt(document.getElementById('k-gapok').value)||GAPOK_DEF, jam_lembur:parseInt(document.getElementById('k-lembur').value)||0, full_lembur:document.getElementById('k-fl').value, potongan:parseInt(document.getElementById('k-potongan').value)||0, absensi, lembur_harian, periode:'Dinamis' };
   let err;
-  if (editId) {
-    delete row.id;
-    err = await updateKaryawan(editId, row);
-  } else {
-    err = await insertKaryawan(row);
-  }
-  if (err) { toast('Gagal menyimpan: ' + err.message, 'error'); return; }
-  toast(editId ? 'Data karyawan diperbarui.' : 'Karyawan berhasil ditambahkan.', 'success');
-  closeModal('modal-karyawan');
-  await reload();
+  if(editId) err=await updateKaryawan(editId,row);
+  else err=await insertKaryawan(row);
+  if(err){toast('Gagal simpan: '+err.message,'error'); return;}
+  toast(editId?'Data diperbarui':'Karyawan ditambahkan','success');
+  closeModal('modal-karyawan'); await reload();
 }
+function openEditRekap(id) { const r=allData.find(x=>x.id===id); if(!r)return; document.getElementById('er-id').value=id; document.getElementById('er-nama').innerText=r.nama; document.getElementById('er-lembur').value=r.jam_lembur||0; document.getElementById('er-fl').value=r.full_lembur||'F'; document.getElementById('er-potongan').value=r.potongan||0; openModal('modal-edit-rekap'); }
+async function saveEditRekap() { if(!isAdmin)return; const id=parseInt(document.getElementById('er-id').value); const changes={ jam_lembur:parseInt(document.getElementById('er-lembur').value)||0, full_lembur:document.getElementById('er-fl').value, potongan:parseInt(document.getElementById('er-potongan').value)||0 }; const err=await updatePartial(id,changes); if(err){toast('Gagal','error');return;} toast('Rekap diperbarui','success'); closeModal('modal-edit-rekap'); await reload(); }
+async function hapus(id){ if(!confirm('Hapus karyawan ini?'))return; const err=await deleteById(id); if(err){toast('Gagal hapus','error');return;} toast('Data dihapus','success'); await reload(); }
 
-// ─── MODAL EDIT REKAP ────────────────────────────────────
-function openEditRekap(id) {
-  if (!isAdmin) { toast('Hanya admin.', 'error'); return; }
-  const r = allData.find(x => x.id === id);
-  if (!r) { toast('Data tidak ditemukan', 'error'); return; }
-  document.getElementById('er-id').value = id;
-  document.getElementById('er-nama').textContent = r.nama || '';
-  document.getElementById('er-lembur').value = r.jam_lembur || 0;
-  document.getElementById('er-fl').value = r.full_lembur || 'F';
-  document.getElementById('er-potongan').value = r.potongan || 0;
-  openModal('modal-edit-rekap');
-}
+function fmt(n){return (n||0).toLocaleString('id-ID');}
+function esc(s){const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML;}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+function toast(msg,type){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast '+type; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3200); }
+function switchTab(name){ document.querySelectorAll('.tab').forEach((t,i)=>{ t.classList.toggle('active',['absensi','rekap','slip'][i]===name); }); document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active')); document.getElementById('tab-'+name).classList.add('active'); }
 
-async function saveEditRekap() {
-  if (!isAdmin) return;
-  const id = parseInt(document.getElementById('er-id').value);
-  if (!id) { toast('ID tidak valid', 'error'); return; }
-  const changes = {
-    jam_lembur: parseInt(document.getElementById('er-lembur').value) || 0,
-    full_lembur: document.getElementById('er-fl').value,
-    potongan: parseInt(document.getElementById('er-potongan').value) || 0,
-  };
-  const err = await updatePartial(id, changes);
-  if (err) { toast('Gagal menyimpan: ' + err.message, 'error'); return; }
-  toast('Rekap gaji diperbarui.', 'success');
-  closeModal('modal-edit-rekap');
-  await reload();
-}
-
-// ─── HAPUS ────────────────────────────────────────────────
-async function hapus(id) {
-  if (!isAdmin) { toast('Hanya admin.', 'error'); return; }
-  const r = allData.find(x => x.id === id);
-  if (!confirm(`Hapus karyawan "${r?.nama}"?\nData absensi dan gaji akan ikut terhapus permanen.`)) return;
-  const err = await deleteById(id);
-  if (err) { toast('Gagal menghapus: ' + err.message, 'error'); return; }
-  toast('Data karyawan dihapus.', 'success');
-  await reload();
-}
-
-// ─── UTILS ────────────────────────────────────────────────
-function cntS(r, s) {
-  return (r.absensi || Array(31).fill('H')).filter(x => x === s).length;
-}
-function calcGaji(r) {
-  const gapok = r.gaji_pokok || GAPOK_DEF;
-  const lemburRp = (r.jam_lembur || 0) * UPAH_JAM;
-  const bonus = r.full_lembur === 'T' ? BONUS_FL : 0;
-  const potManual = r.potongan || 0;
-  const jmlAlpha = cntS(r,'A');
-  const jmlIzin  = cntS(r,'I');
-  const potOtomatis = (jmlAlpha + jmlIzin) * POTONGAN_ALPHA_IZIN;
-  return gapok + lemburRp + bonus - potManual - potOtomatis;
-}
-function fmt(n)  { return (n||0).toLocaleString('id-ID'); }
-function esc(s)  { const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
-
-function openModal(id)  { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(el => {
-  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
-});
-function toast(msg, type = 'info') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast ' + type;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3200);
-}
-function switchTab(name) {
-  document.querySelectorAll('.tab').forEach((t, i) => {
-    t.classList.toggle('active', ['absensi','rekap','slip'][i] === name);
-  });
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-}
-
-// ─── INIT ─────────────────────────────────────────────────
-(async () => {
-  await loadPengaturan();  // memuat start_date juga
-  allData = await loadData();
-  updateSummary();
-  renderAbsensi();
-  renderRekap();
-  renderSlip();
-})();
+(async()=>{ await loadPengaturan(); allData=await loadData(); updateSummary(); renderAbsensi(); renderRekap(); renderSlip(); })();
 </script>
 </body>
 </html>
