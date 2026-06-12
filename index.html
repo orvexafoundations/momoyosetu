@@ -155,6 +155,22 @@ tr:hover td{background:#f9fafb}
   <div class="tab-content active" id="tab-absensi">
     <div class="toolbar">
       <input type="text" id="search-abs" placeholder="🔍 Cari nama karyawan…" oninput="renderAbsensi()" style="width:220px">
+      
+      <!-- KONTROL EDIT PENGATURAN (hanya untuk admin) -->
+      <div id="admin-settings" style="display:none; background:var(--surface); padding:4px 12px; border-radius:20px; border:1px solid var(--border2); gap:10px; align-items:center; display:flex; flex-wrap:wrap;">
+        <span style="font-size:12px; color:var(--muted);">⚙️ Pengaturan:</span>
+        <label style="font-size:11px;">Upah Lembur/jam</label>
+        <select id="upah-lembur-select" style="width:90px;">
+          <option value="10000">Rp 10.000</option>
+          <option value="20000">Rp 20.000</option>
+          <option value="30000">Rp 30.000</option>
+          <option value="50000">Rp 50.000</option>
+        </select>
+        <label style="font-size:11px;">Potongan Alpha/Izin/hari</label>
+        <input type="number" id="potongan-ai-input" value="88000" min="0" step="1000" style="width:100px;">
+        <button class="btn btn-sm btn-primary" onclick="simpanPengaturan()">💾 Simpan</button>
+      </div>
+
       <div class="legend">
         <div class="leg-item"><div class="leg-box" style="background:var(--shift2-bg);border:1px solid #fca5a5"></div>Shift 2 (Jum/Sab/Min)</div>
         <div class="leg-item"><div class="leg-box" style="background:var(--lembur-bg);border:1px solid #c4b5fd"></div>Full Lembur</div>
@@ -170,7 +186,7 @@ tr:hover td{background:#f9fafb}
   <div class="tab-content" id="tab-rekap">
     <div class="toolbar">
       <input type="text" id="search-rekap" placeholder="🔍 Cari nama…" oninput="renderRekap()" style="width:220px">
-      <span style="font-size:12px;color:var(--muted);margin-left:auto">Gaji Pokok: Rp 2.300.000 &nbsp;|&nbsp; Upah Lembur: Rp 10.000/jam &nbsp;|&nbsp; Bonus Full Lembur: Rp 50.000 &nbsp;|&nbsp; ⚠️ Potongan Otomatis Alpha/Izin: Rp88.000/hari</span>
+      <span style="font-size:12px;color:var(--muted);margin-left:auto" id="info-upah-lembur">Gaji Pokok: Rp 2.300.000 &nbsp;|&nbsp; Upah Lembur: Rp 10.000/jam &nbsp;|&nbsp; Bonus Full Lembur: Rp 50.000 &nbsp;|&nbsp; ⚠️ Potongan Otomatis Alpha/Izin: Rp88.000/hari</span>
     </div>
     <div class="table-wrap">
       <div class="loader" id="loader-rekap"><span class="spinner"></span>Memuat rekap gaji…</div>
@@ -255,16 +271,19 @@ const SUPA_URL  = 'https://vfjclzelcaanbjppgtou.supabase.co';
 const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmamNsemVsY2FhbmJqcHBndG91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExODMwOTgsImV4cCI6MjA5Njc1OTA5OH0.TqJAkZjsYaOinKApvjHWjxbXZ9Esb0cI7K6yy_HPuMw';
 const ADMIN_PW  = 'momoyosetu123';
 const GAPOK_DEF = 2300000;
-const UPAH_JAM  = 10000;
 const BONUS_FL  = 50000;
-const POTONGAN_ALPHA_IZIN = 88000; // tambahan fitur otomatis
 const TABLE     = 'karyawan_absensi';
+const TABLE_PENGATURAN = 'pengaturan';
 
 const db = window.supabase.createClient(SUPA_URL, SUPA_ANON);
 
 let isAdmin  = false;
 let allData  = [];
 let editId   = null;
+
+// --- Variabel dinamis dari Supabase ---
+let UPAH_JAM = 10000;
+let POTONGAN_ALPHA_IZIN = 88000;
 
 // ─── DATES (26 Mei - 25 Juni 2026) ───────────────────────
 const HARI_SHORT = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
@@ -279,6 +298,53 @@ for (let i = 0; i < 31; i++) {
     hari: HARI_SHORT[dow],
     isShift2: [0,5,6].includes(dow)
   });
+}
+
+// ========== FUNGSI PENGATURAN (LOAD & SAVE) ==========
+async function loadPengaturan() {
+  // Ambil upah lembur
+  const { data: dataLembur, error: errLembur } = await db.from(TABLE_PENGATURAN).select('value').eq('key', 'upah_lembur').single();
+  if (dataLembur && !errLembur) UPAH_JAM = parseInt(dataLembur.value);
+  // Ambil potongan alpha/izin
+  const { data: dataPot, error: errPot } = await db.from(TABLE_PENGATURAN).select('value').eq('key', 'potongan_alpha_izin').single();
+  if (dataPot && !errPot) POTONGAN_ALPHA_IZIN = parseInt(dataPot.value);
+  
+  // Update tampilan di toolbar admin
+  document.getElementById('upah-lembur-select').value = UPAH_JAM;
+  document.getElementById('potongan-ai-input').value = POTONGAN_ALPHA_IZIN;
+  updateInfoDisplay();
+}
+
+async function simpanPengaturan() {
+  if (!isAdmin) { toast('Hanya admin yang dapat mengubah pengaturan.', 'error'); return; }
+  const newUpah = parseInt(document.getElementById('upah-lembur-select').value);
+  const newPot = parseInt(document.getElementById('potongan-ai-input').value);
+  if (isNaN(newUpah) || isNaN(newPot) || newUpah <=0 || newPot <0) {
+    toast('Nilai tidak valid', 'error');
+    return;
+  }
+  // Upsert ke Supabase
+  const { error: err1 } = await db.from(TABLE_PENGATURAN).upsert({ key: 'upah_lembur', value: String(newUpah) });
+  const { error: err2 } = await db.from(TABLE_PENGATURAN).upsert({ key: 'potongan_alpha_izin', value: String(newPot) });
+  if (err1 || err2) {
+    toast('Gagal menyimpan: ' + (err1?.message || err2?.message), 'error');
+    return;
+  }
+  UPAH_JAM = newUpah;
+  POTONGAN_ALPHA_IZIN = newPot;
+  updateInfoDisplay();
+  toast('Pengaturan berhasil disimpan ke Supabase!', 'success');
+  // Refresh semua tampilan yang bergantung pada nilai ini
+  renderRekap();
+  renderSlip();
+  updateSummary();
+}
+
+function updateInfoDisplay() {
+  const infoSpan = document.getElementById('info-upah-lembur');
+  if (infoSpan) {
+    infoSpan.innerHTML = `Gaji Pokok: Rp 2.300.000 &nbsp;|&nbsp; Upah Lembur: Rp ${fmt(UPAH_JAM)}/jam &nbsp;|&nbsp; Bonus Full Lembur: Rp 50.000 &nbsp;|&nbsp; ⚠️ Potongan Otomatis Alpha/Izin: Rp ${fmt(POTONGAN_ALPHA_IZIN)}/hari`;
+  }
 }
 
 // ─── AUTH ─────────────────────────────────────────────────
@@ -319,6 +385,9 @@ function updateAdminUI() {
   document.getElementById('btn-login').style.display   = show ? 'none' : 'inline-block';
   document.getElementById('btn-logout').style.display  = show ? 'inline-block' : 'none';
   document.getElementById('btn-add').style.display     = show ? 'inline-block' : 'none';
+  // Tampilkan panel pengaturan admin
+  const adminSettingsDiv = document.getElementById('admin-settings');
+  if (adminSettingsDiv) adminSettingsDiv.style.display = show ? 'flex' : 'none';
   const thAksi = document.getElementById('th-aksi-rekap');
   if (thAksi) thAksi.style.display = show ? '' : 'none';
   renderAbsensi();
@@ -326,7 +395,7 @@ function updateAdminUI() {
   renderSlip();
 }
 
-// ─── SUPABASE CRUD (DIPERBAIKI) ─────────────────────────
+// ─── SUPABASE CRUD ────────────────────────────────────────
 async function loadData() {
   const { data, error } = await db.from(TABLE).select('*').order('id');
   if (error) { toast('Gagal memuat: ' + error.message, 'error'); return []; }
@@ -370,7 +439,7 @@ function updateSummary() {
   document.getElementById('s-gaji').textContent  = 'Rp ' + fmt(totalGaji);
 }
 
-// ─── RENDER FUNCTIONS ──────────────────────────
+// ─── RENDER FUNCTIONS (menggunakan variabel dinamis) ──────────
 function renderAbsensi() {
   const q    = (document.getElementById('search-abs').value || '').toLowerCase();
   const rows = allData.filter(r => (r.nama||'').toLowerCase().includes(q));
@@ -381,7 +450,7 @@ function renderAbsensi() {
     const abs  = r.absensi || Array(31).fill('H');
     const H=cntS(r,'H'), I=cntS(r,'I'), S=cntS(r,'S'), A=cntS(r,'A');
     const isFL = r.full_lembur === 'T';
-    return `<tr class="${isFL ? 'row-fl' : ''}"><td>${i+1}</td><td class="col-left" style="font-weight:600">${esc(r.nama)}</td>${abs.map((s,di) => `<td class="${dates[di].isShift2 ? 'td-shift2' : ''}"><span class="badge badge-${s.toLowerCase()}">${s}</span></td>`).join('')}<td><span class="badge badge-h">${H}</span></td><td style="color:var(--accent)">${I}</td><td style="color:var(--warn)">${S}</td><td style="color:${A>0?'var(--danger)':'var(--muted)'};font-weight:${A>0?'700':'400'}">${A}</td><td>${r.jam_lembur||0}</td><td>${isFL ? '<span class="badge badge-fl">✓ Ya</span>' : '<span style="color:var(--muted)">—</span>'}</td>${isAdmin ? `<td><div class="action-btns"><button class="btn-edit" onclick="openModalKaryawan(${r.id})">✏️ Edit</button><button class="btn-del" onclick="hapus(${r.id})">🗑 Hapus</button></div></td>` : ''}</table>`;
+    return `<tr class="${isFL ? 'row-fl' : ''}"><td>${i+1}</td><td class="col-left" style="font-weight:600">${esc(r.nama)}</td>${abs.map((s,di) => `<td class="${dates[di].isShift2 ? 'td-shift2' : ''}"><span class="badge badge-${s.toLowerCase()}">${s}</span></td>`).join('')}<td><span class="badge badge-h">${H}</span></td><td style="color:var(--accent)">${I}</td><td style="color:var(--warn)">${S}</td><td style="color:${A>0?'var(--danger)':'var(--muted)'};font-weight:${A>0?'700':'400'}">${A}</td><td>${r.jam_lembur||0}</td><td>${isFL ? '<span class="badge badge-fl">✓ Ya</span>' : '<span style="color:var(--muted)">—</span>'}</td>${isAdmin ? `<td><div class="action-btns"><button class="btn-edit" onclick="openModalKaryawan(${r.id})">✏️ Edit</button><button class="btn-del" onclick="hapus(${r.id})">🗑 Hapus</button></div></td>` : ''}</tr>`;
   }).join('');
   document.getElementById('loader-abs').style.display = 'none';
   document.getElementById('tbl-abs').style.display = 'table';
@@ -433,7 +502,7 @@ function renderRekap() {
     <td>Rp ${fmt(tPotonganManual)}<br><small>+otomatis ${fmt(tPotonganOtomatis)}</small></td>
     <td style="color:var(--accent)">Rp ${fmt(tTotal)}</td>
     ${isAdmin ? '<td></td>' : ''}
-  </tr>`;
+  </td>`;
   document.getElementById('loader-rekap').style.display = 'none';
   document.getElementById('tbl-rekap').style.display = 'table';
 }
@@ -459,7 +528,7 @@ function renderSlip() {
       </div>
       <div class="slip-body">
         <div class="slip-row"><span class="slabel">Gaji Pokok</span><span>Rp ${fmt(gapok)}</span></div>
-        <div class="slip-row"><span class="slabel">Upah Lembur (${jam} jam)</span><span>Rp ${fmt(lemburRp)}</span></div>
+        <div class="slip-row"><span class="slabel">Upah Lembur (${jam} jam @ Rp ${fmt(UPAH_JAM)})</span><span>Rp ${fmt(lemburRp)}</span></div>
         <div class="slip-row"><span class="slabel">Bonus Full Lembur</span><span style="color:var(--success)">Rp ${fmt(bonus)}</span></div>
         <div class="slip-row"><span class="slabel">Potongan Manual</span><span style="color:var(--danger)">- Rp ${fmt(potManual)}</span></div>
         <div class="slip-row"><span class="slabel">Potongan Alpha/Izin (${A+I} hr)</span><span style="color:var(--danger)">- Rp ${fmt(potOtomatis)}</span></div>
@@ -493,13 +562,11 @@ async function saveKaryawan() {
   if (!isAdmin) return;
   const nama = document.getElementById('k-nama').value.trim();
   if (!nama) { toast('Nama tidak boleh kosong!', 'error'); return; }
-  
   const absensi = [];
   for (let i = 0; i < 31; i++) {
     const select = document.getElementById('ab-' + i);
     absensi.push(select ? select.value : 'H');
   }
-  
   const row = {
     nama,
     jabatan:     document.getElementById('k-jabatan').value,
@@ -510,7 +577,6 @@ async function saveKaryawan() {
     absensi,
     periode: '26 Mei - 25 Juni 2026'
   };
-  
   let err;
   if (editId) {
     delete row.id;
@@ -518,7 +584,6 @@ async function saveKaryawan() {
   } else {
     err = await insertKaryawan(row);
   }
-  
   if (err) { toast('Gagal menyimpan: ' + err.message, 'error'); return; }
   toast(editId ? 'Data karyawan diperbarui.' : 'Karyawan berhasil ditambahkan.', 'success');
   closeModal('modal-karyawan');
@@ -604,6 +669,7 @@ function switchTab(name) {
 
 // ─── INIT ─────────────────────────────────────────────────
 (async () => {
+  await loadPengaturan();   // Ambil nilai dari Supabase
   allData = await loadData();
   updateSummary();
   renderAbsensi();
