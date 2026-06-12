@@ -152,6 +152,7 @@ tr:hover td{background:#f9fafb}
     <button class="tab" onclick="switchTab('slip')">🧾 Slip Gaji</button>
   </div>
 
+  <!-- TAB ABSENSI -->
   <div class="tab-content active" id="tab-absensi">
     <div class="toolbar">
       <input type="text" id="search-abs" placeholder="🔍 Cari nama karyawan…" oninput="renderAbsensi()" style="width:220px">
@@ -175,7 +176,12 @@ tr:hover td{background:#f9fafb}
         <div class="leg-item"><div class="leg-box" style="background:var(--shift2-bg);border:1px solid #fca5a5"></div>Shift 2 (Jum/Sab/Min)</div>
         <div class="leg-item"><div class="leg-box" style="background:var(--lembur-bg);border:1px solid #c4b5fd"></div>Full Lembur</div>
       </div>
-      <button class="btn btn-primary" id="btn-add" style="display:none;margin-left:auto" onclick="openModalKaryawan(null)">+ Tambah Karyawan</button>
+      
+      <!-- Tombol Aksi: Tambah Karyawan & Backup Excel -->
+      <div style="display:flex; gap:8px; margin-left:auto;">
+        <button class="btn btn-primary" id="btn-add" style="display:none" onclick="openModalKaryawan(null)">+ Tambah Karyawan</button>
+        <button class="btn btn-primary" id="btn-backup" onclick="exportToExcel()">📥 Backup Excel</button>
+      </div>
     </div>
     <div class="table-wrap">
       <div class="loader" id="loader-abs"><span class="spinner"></span>Memuat data absensi…</div>
@@ -183,6 +189,7 @@ tr:hover td{background:#f9fafb}
     </div>
   </div>
 
+  <!-- TAB REKAP GAJI (tidak berubah) -->
   <div class="tab-content" id="tab-rekap">
     <div class="toolbar">
       <input type="text" id="search-rekap" placeholder="🔍 Cari nama…" oninput="renderRekap()" style="width:220px">
@@ -198,6 +205,7 @@ tr:hover td{background:#f9fafb}
     </div>
   </div>
 
+  <!-- TAB SLIP GAJI (tidak berubah) -->
   <div class="tab-content" id="tab-slip">
     <div class="toolbar">
       <input type="text" id="search-slip" placeholder="🔍 Cari nama…" oninput="renderSlip()" style="width:220px">
@@ -302,14 +310,11 @@ for (let i = 0; i < 31; i++) {
 
 // ========== FUNGSI PENGATURAN (LOAD & SAVE) ==========
 async function loadPengaturan() {
-  // Ambil upah lembur
   const { data: dataLembur, error: errLembur } = await db.from(TABLE_PENGATURAN).select('value').eq('key', 'upah_lembur').single();
   if (dataLembur && !errLembur) UPAH_JAM = parseInt(dataLembur.value);
-  // Ambil potongan alpha/izin
   const { data: dataPot, error: errPot } = await db.from(TABLE_PENGATURAN).select('value').eq('key', 'potongan_alpha_izin').single();
   if (dataPot && !errPot) POTONGAN_ALPHA_IZIN = parseInt(dataPot.value);
   
-  // Update tampilan di toolbar admin
   document.getElementById('upah-lembur-select').value = UPAH_JAM;
   document.getElementById('potongan-ai-input').value = POTONGAN_ALPHA_IZIN;
   updateInfoDisplay();
@@ -323,7 +328,6 @@ async function simpanPengaturan() {
     toast('Nilai tidak valid', 'error');
     return;
   }
-  // Upsert ke Supabase
   const { error: err1 } = await db.from(TABLE_PENGATURAN).upsert({ key: 'upah_lembur', value: String(newUpah) });
   const { error: err2 } = await db.from(TABLE_PENGATURAN).upsert({ key: 'potongan_alpha_izin', value: String(newPot) });
   if (err1 || err2) {
@@ -334,7 +338,6 @@ async function simpanPengaturan() {
   POTONGAN_ALPHA_IZIN = newPot;
   updateInfoDisplay();
   toast('Pengaturan berhasil disimpan ke Supabase!', 'success');
-  // Refresh semua tampilan yang bergantung pada nilai ini
   renderRekap();
   renderSlip();
   updateSummary();
@@ -385,7 +388,6 @@ function updateAdminUI() {
   document.getElementById('btn-login').style.display   = show ? 'none' : 'inline-block';
   document.getElementById('btn-logout').style.display  = show ? 'inline-block' : 'none';
   document.getElementById('btn-add').style.display     = show ? 'inline-block' : 'none';
-  // Tampilkan panel pengaturan admin
   const adminSettingsDiv = document.getElementById('admin-settings');
   if (adminSettingsDiv) adminSettingsDiv.style.display = show ? 'flex' : 'none';
   const thAksi = document.getElementById('th-aksi-rekap');
@@ -502,7 +504,7 @@ function renderRekap() {
     <td>Rp ${fmt(tPotonganManual)}<br><small>+otomatis ${fmt(tPotonganOtomatis)}</small></td>
     <td style="color:var(--accent)">Rp ${fmt(tTotal)}</td>
     ${isAdmin ? '<td></td>' : ''}
-  </td>`;
+   </tr>`;
   document.getElementById('loader-rekap').style.display = 'none';
   document.getElementById('tbl-rekap').style.display = 'table';
 }
@@ -538,6 +540,79 @@ function renderSlip() {
   }).join('');
   document.getElementById('loader-slip').style.display = 'none';
   document.getElementById('slip-grid').style.display = 'grid';
+}
+
+// ─── EXPORT TO EXCEL (BACKUP DATA) ─────────────────────────
+function exportToExcel() {
+  if (!allData.length) { toast('Tidak ada data untuk diekspor', 'error'); return; }
+  
+  // Header
+  let headers = ['Nama', 'Jabatan', 'Gaji Pokok', 'Jam Lembur', 'Full Lembur', 'Potongan Manual'];
+  const dateHeaders = dates.map(d => `${d.tgl}/${d.bln}`);
+  headers.push(...dateHeaders);
+  headers.push('Hadir', 'Izin', 'Sakit', 'Alpha', 'Total Gaji');
+  
+  // Data karyawan
+  const rows = allData.map(r => {
+    const abs = r.absensi || Array(31).fill('H');
+    const H = cntS(r,'H');
+    const I = cntS(r,'I');
+    const S = cntS(r,'S');
+    const A = cntS(r,'A');
+    const total = calcGaji(r);
+    const row = [
+      r.nama,
+      r.jabatan || 'Karyawan',
+      r.gaji_pokok || GAPOK_DEF,
+      r.jam_lembur || 0,
+      r.full_lembur === 'T' ? 'Ya' : 'Tidak',
+      r.potongan || 0
+    ];
+    for (let i=0; i<dates.length; i++) {
+      let status = (abs[i] && abs[i] !== undefined) ? abs[i] : 'H';
+      row.push(status);
+    }
+    row.push(H, I, S, A, total);
+    return row;
+  });
+  
+  // Metadata pengaturan & periode
+  const metadataRows = [
+    ['', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+    ['KETERANGAN PENGATURAN:', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+    ['Upah Lembur per jam', UPAH_JAM, '', '', '', '', '', '', '', '', '', '', '', '', ''],
+    ['Potongan Alpha/Izin per hari', POTONGAN_ALPHA_IZIN, '', '', '', '', '', '', '', '', '', '', '', '', ''],
+    ['Bonus Full Lembur', BONUS_FL, '', '', '', '', '', '', '', '', '', '', '', '', ''],
+    ['Periode Mulai', `${dates[0]?.tgl}/${dates[0]?.bln}/2026`, '', '', '', '', '', '', '', '', '', '', '', '', ''],
+    ['Periode Akhir', `${dates[dates.length-1]?.tgl}/${dates[dates.length-1]?.bln}/2026`, '', '', '', '', '', '', '', '', '', '', '', '', '']
+  ];
+  
+  const allRows = [...rows, ...metadataRows];
+  
+  // Konversi ke CSV
+  const csvContent = allRows.map(row => {
+    return row.map(cell => {
+      if (cell === undefined || cell === null) cell = '';
+      let stringCell = String(cell);
+      if (stringCell.includes(',') || stringCell.includes('"') || stringCell.includes('\n')) {
+        stringCell = stringCell.replace(/"/g, '""');
+        stringCell = `"${stringCell}"`;
+      }
+      return stringCell;
+    }).join(',');
+  }).join('\n');
+  
+  // Download file CSV dengan BOM UTF-8
+  const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.href = url;
+  link.setAttribute('download', `backup_absensi_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  toast('Backup berhasil diunduh!', 'success');
 }
 
 // ─── MODAL KARYAWAN (TAMBAH / EDIT) ──────────────────────
@@ -669,7 +744,7 @@ function switchTab(name) {
 
 // ─── INIT ─────────────────────────────────────────────────
 (async () => {
-  await loadPengaturan();   // Ambil nilai dari Supabase
+  await loadPengaturan();
   allData = await loadData();
   updateSummary();
   renderAbsensi();
